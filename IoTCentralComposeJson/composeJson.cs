@@ -14,7 +14,8 @@ namespace FunctionApp1
 
 {
 
-    public static class IoTCentralComposeJson{
+    public static class IoTCentralComposeJson
+    {
 
         [FunctionName("composeJson")]
 
@@ -34,12 +35,9 @@ namespace FunctionApp1
 
             me.AC = e.Content.AC;
             me.D0Status = e.Content.D0Status;
-            /*me.D0Status = e.Content.D1Status;
-            me.D0Status = e.Content.D2Status;
-            me.D0Status = e.Content.D3Status;
-            me.D0Status = e.Content.D4Status;
-            me.D0Status = e.Content.D5Status;
-            me.D0Status = e.Content.D6Status;*/
+            me.D1Status = e.Content.D1Status;
+            me.D2Status = e.Content.D2Status;
+            //me.D3Status = e.Content.D3Status;
             me.A0Status = e.Content.A0Status;
             me.IothubConnectionDeviceId = e.Properties.IothubConnectionDeviceId;
             me.IothubMessageSource = e.Properties.IothubMessageSource;
@@ -52,12 +50,9 @@ namespace FunctionApp1
             outputJsons.Timestamp = DateTime.UtcNow.ToString();
             outputJsons.MachineEvent = me;
 
-            //Debug.WriteLine(e.ToString());
-
             var json = JsonConvert.SerializeObject(outputJsons);
 
             return req.CreateResponse(HttpStatusCode.OK, json, "application/json");
-            //return (ActionResult)new OkObjectResult(json);
 
         }
 
@@ -68,6 +63,9 @@ namespace FunctionApp1
         public decimal? AC { get; set; }
         [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
         public string D0Status { get; set; }
+        public string D1Status { get; set; }
+        public string D2Status { get; set; }
+        //public string D3Status { get; set; }
 
         [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
         public string A0Status { get; set; }
@@ -101,6 +99,9 @@ namespace FunctionApp1
         public decimal? AC { get; set; }
         [JsonProperty("D0Status")]
         public string D0Status { get; set; }
+        public string D1Status { get; set; }
+        public string D2Status { get; set; }
+        //public string D3Status { get; set; }
         [JsonProperty("A0Status")]
         public string A0Status { get; set; }
     }
