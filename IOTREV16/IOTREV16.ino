@@ -31,7 +31,7 @@
 	
 	///////////*GLOBAL VARIABLES*//////////
 	char IOT_CONFIG_CONNECTION_STRING[200];
-  int testMemory;
+  int platformMemory;
 	static struct Reporting PinReporting;
 	static bool DweetData;
 	static struct PinStatus LastPinStatus = {true}; //initialise to true to send out startup state
@@ -73,17 +73,51 @@ void setup() {
     wifiManager.autoConnect("AutoConnectAP", "administrator");
     start_server();
     Serial.println (F("HTTP server started"));
-    EEPROM_readAnything(205,testMemory);
-    Serial.println (testMemory);
+    EEPROM_readAnything(205,platformMemory);
+    Serial.println (platformMemory);
     initTime();
-    EEPROM_readAnything(256,IOT_CONFIG_CONNECTION_STRING);
+    //////
+    if(platformMemory == 1){ // When the user has chosen Azure IoT Central
+      Serial.println ("User has chosen Azure IoT Central");
+      EEPROM_readAnything(256,IOT_CONFIG_CONNECTION_STRING);
     iotHubClientHandle = IoTHubClient_LL_CreateFromConnectionString(IOT_CONFIG_CONNECTION_STRING, MQTT_Protocol);
     if (iotHubClientHandle == NULL)
     {
         Serial.println(F("Failed on IoTHubClient_CreateFromConnectionString"));
         ConKey = false; 
     }
-    else{ConKey = true;}
+      else{
+        ConKey = true;
+      }
+      //////////////////// When the user has chosen AWS
+    } else if (platformMemory ==2){
+      Serial.println ("User has chosen AWS");
+      EEPROM_readAnything(256,IOT_CONFIG_CONNECTION_STRING);
+    iotHubClientHandle = IoTHubClient_LL_CreateFromConnectionString(IOT_CONFIG_CONNECTION_STRING, MQTT_Protocol);
+    if (iotHubClientHandle == NULL)
+    {
+        Serial.println(F("Failed on IoTHubClient_CreateFromConnectionString"));
+        ConKey = false; 
+    }
+      else{
+        ConKey = true;
+      }
+
+     ///////////////When the user has chosen GCP
+    } else if (platformMemory ==3){
+      Serial.println ("User has chosen GCP");
+      EEPROM_readAnything(256,IOT_CONFIG_CONNECTION_STRING);
+    iotHubClientHandle = IoTHubClient_LL_CreateFromConnectionString(IOT_CONFIG_CONNECTION_STRING, MQTT_Protocol);
+    if (iotHubClientHandle == NULL)
+    {
+        Serial.println(F("Failed on IoTHubClient_CreateFromConnectionString"));
+        ConKey = false; 
+    }
+      else{
+        ConKey = true;
+      }
+    }
+    
     
      //read all settings from EEPROM
     EEPROM_readAnything(0,PinReporting);
@@ -108,16 +142,36 @@ void loop() {
   
      handle_client();
      
-	    if (iotcount >= PinReporting.frequency)
-        {
-          if(PinStatusChange() && ConKey)
-            { 
+	    if (iotcount >= PinReporting.frequency ){
+      if(platformMemory == 1 ){
+        if(PinStatusChange() && ConKey ) {
+              Serial.println ("11111111111111111111111111111");
               char messagePayload[MESSAGE_MAX_LEN];
               readMessage(messageCount, messagePayload);
               sendMessage(iotHubClientHandle, messagePayload);
               IoTHubFullSendReceive();
               messageCount++;
             } 
+      } else if(platformMemory == 2 ){
+        if(PinStatusChange() && ConKey ) {
+              Serial.println ("2222222222222222222222222222222222222222222222222222222222");
+              char messagePayload[MESSAGE_MAX_LEN];
+              readMessage(messageCount, messagePayload);
+              sendMessage(iotHubClientHandle, messagePayload);
+              IoTHubFullSendReceive();
+              messageCount++;
+            } 
+      } else if(platformMemory == 3 ){
+        if(PinStatusChange() && ConKey ) {
+              Serial.println ("3333333333333333333333333333");
+              char messagePayload[MESSAGE_MAX_LEN];
+              readMessage(messageCount, messagePayload);
+              sendMessage(iotHubClientHandle, messagePayload);
+              IoTHubFullSendReceive();
+              messageCount++;
+            } 
+      }
+          
 			   iotcount = 0;
         }
 
