@@ -46,6 +46,7 @@ void start_server(){
     server.on ("/ConKey", handleConKey);
     server.on ("/SetConKey", handleSaveConKey);    
     server.on ("/SetDweet", handleSaveDweet);
+    server.on ("/SetPlatform", savePlatformState);
     
     server.begin();
 }
@@ -108,37 +109,73 @@ void handleSettings() {
   bool DweetData;
   EEPROM_readAnything(150, DweetData);
 
-    String Page = FPSTR(HTTP_HEADER);
-	Page += FPSTR(HTTP_HEADER_PARAM);
-	Page.replace("{h1}", "Setup to broadcast IP address");
-	Page.replace("{h2}", "");
-	Page.replace("{h3}", "");
-	Page.replace("{h4}", "");
-	Page.replace("{f_i)", "dweetNameForm");
+  int PlatformData;
+  EEPROM_readAnything(205,PlatformData);
+  
 
-	String item = FPSTR(HTTP_FIELDSET_PARAM);
-	item.replace("{L)", "Dweet IP");
-	item.replace("{i1)", HTTP_INPUT_PARAM);
-	item.replace("{i_t)", "radio");
-	item.replace("{N)", "IPState");
-	item.replace("{id}", "IPState");
-	item.replace("{V)", "1");
-	if(DweetData){item.replace("{pf)", "checked");}
-	else{item.replace("{pf)", "");}
-	item.replace("{F)", " ON");
-	item.replace("{i2)", HTTP_INPUT_PARAM); 
-	item.replace("{i_t)", "radio");
-	item.replace("{N)", "IPState");
-	item.replace("{id}", "IPState");
-	item.replace("{V)", "O");
-	if(!DweetData){item.replace("{pf)", "checked");}
-	else{item.replace("{pf)", "");}
-	item.replace("{F)", " OFF");
-	item.replace("{i3)", ""); 
-	item.replace("{i4)", "");	
-	item.replace("{i5)", "");	
-	item.replace("{i6)", "");		
-	Page += item;  
+    String Page = FPSTR(HTTP_HEADER);
+  Page += FPSTR(HTTP_HEADER_PARAM);
+  Page.replace("{h1}", "Setup to broadcast IP address");
+  Page.replace("{h2}", "");
+  Page.replace("{h3}", "");
+  Page.replace("{h4}", "");
+  Page.replace("{f_i)", "dweetNameForm");
+
+  String item = FPSTR(HTTP_FIELDSET_PARAM);
+  item.replace("{L)", "Dweet IP");
+  item.replace("{i1)", HTTP_INPUT_PARAM);
+  item.replace("{i_t)", "radio");
+  item.replace("{N)", "IPState");
+  item.replace("{id}", "IPState");
+  item.replace("{V)", "1");
+  if(DweetData){item.replace("{pf)", "checked");}
+  else{item.replace("{pf)", "");}
+  item.replace("{F)", " ON");
+  item.replace("{i2)", HTTP_INPUT_PARAM); 
+  item.replace("{i_t)", "radio");
+  item.replace("{N)", "IPState");
+  item.replace("{id}", "IPState");
+  item.replace("{V)", "O");
+  if(!DweetData){item.replace("{pf)", "checked");}
+  else{item.replace("{pf)", "");}
+  item.replace("{F)", " OFF");
+  item.replace("{i3)", ""); 
+  item.replace("{i4)", ""); 
+  item.replace("{i5)", ""); 
+  item.replace("{i6)", "");   
+  Page += item; 
+
+  //platform radio buttons
+  item = FPSTR(HTTP_FIELDSET_PARAM);
+  item.replace("{L)", "Platform");
+  item.replace("{i1)", HTTP_INPUT_PARAM);
+  item.replace("{i_t)", "radio");
+  item.replace("{N)", "PlatformState");
+  item.replace("{id}", "PlatformState");
+  item.replace("{V)", "1");
+  if(PlatformData == 1){item.replace("{pf)", "checked");}
+  else{item.replace("{pf)", "");}
+  item.replace("{F)", "IoT Central  ");
+  item.replace("{i2)", HTTP_INPUT_PARAM);
+  item.replace("{i_t)", "radio");
+  item.replace("{N)", "PlatformState");
+  item.replace("{id}", "PlatformState");
+  item.replace("{V)", "2");
+  if(PlatformData == 2){item.replace("{pf)", "checked");}
+  else{item.replace("{pf)", "");}
+  item.replace("{F)", "AWS  ");
+  item.replace("{i3)", HTTP_INPUT_PARAM);
+  item.replace("{i_t)", "radio");
+  item.replace("{N)", "PlatformState");
+  item.replace("{id}", "PlatformState");
+  item.replace("{V)", "3");
+  if(PlatformData == 3){item.replace("{pf)", "checked");}
+  else{item.replace("{pf)", "");}
+  item.replace("{F)", "GCP");
+  item.replace("{i4)", "");
+  item.replace("{i5)", "");
+  item.replace("{i6)", "");
+  Page += item;
 	item = FPSTR(HTTP_FIELDSET_PARAM);
 	item.replace("{L)", "Actions");
 	item.replace("{i1)", "<div>");
@@ -165,6 +202,10 @@ Page += F("'>Link to get IP address</a></p>"
              "$('#set_button').click(function(OnEvent){ OnEvent.preventDefault();"
              "var IPState = $('input[name=IPState]:checked', '#dweetNameForm').val();"
              "$.get('/SetDweet?IPState=' + IPState, function(Dweet){ console.log(Dweet); }); "
+              // Switch Platform
+           "var PlatformState = $('input[name=PlatformState]:checked', '#dweetNameForm').val();"
+             "$.get('/SetPlatform?PlatformState=' + PlatformState, function(Dweet){ console.log(Dweet); }); "
+              //
            "$('#myModal').show();});"
            "$('#closeBtn').click(function(OnEvent){ $('#myModal').hide();});"
            "document.getElementById(\"myIPAnchor\").href = b;"
@@ -187,6 +228,21 @@ void handleSaveDweet() {
     }
    else {DweetData = false;}
    EEPROM_writeAnything(150, DweetData);
+}
+
+void savePlatformState(){
+    if (!server.authenticate(www_username, www_password)) {
+    return server.requestAuthentication();
+  }
+  int platformNo;
+  if(server.arg("PlatformState")=="1"){
+    platformNo = 1; 
+  } else if(server.arg("PlatformState")=="2"){
+    platformNo = 2; 
+  } else if(server.arg("PlatformState")=="3"){
+    platformNo = 3; 
+  }
+  EEPROM_writeAnything(205, platformNo);
 }
 
    

@@ -53,4 +53,6 @@ void handleSaveConKey();
 
 void handleSaveResponse();
 
+void savePlatformState();
+
 #endif /* WEB_PORTAL_H */

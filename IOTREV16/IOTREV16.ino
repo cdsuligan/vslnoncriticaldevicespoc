@@ -31,6 +31,7 @@
 	
 	///////////*GLOBAL VARIABLES*//////////
 	char IOT_CONFIG_CONNECTION_STRING[200];
+  int testMemory;
 	static struct Reporting PinReporting;
 	static bool DweetData;
 	static struct PinStatus LastPinStatus = {true}; //initialise to true to send out startup state
@@ -72,6 +73,8 @@ void setup() {
     wifiManager.autoConnect("AutoConnectAP", "administrator");
     start_server();
     Serial.println (F("HTTP server started"));
+    EEPROM_readAnything(205,testMemory);
+    Serial.println (testMemory);
     initTime();
     EEPROM_readAnything(256,IOT_CONFIG_CONNECTION_STRING);
     iotHubClientHandle = IoTHubClient_LL_CreateFromConnectionString(IOT_CONFIG_CONNECTION_STRING, MQTT_Protocol);
