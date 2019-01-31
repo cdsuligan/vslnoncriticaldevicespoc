@@ -20,38 +20,38 @@
 #include <DNSServer.h>
 #include "WiFiManager2.h"
 
-	struct PinStatus {
-	  bool D0Status;
-	  bool D1Status;
-	  bool D2Status;
-	  bool A0Status;
-	};
+  struct PinStatus {
+    bool D0Status;
+    bool D1Status;
+    bool D2Status;
+    bool A0Status;
+  };
 
-	#define MESSAGE_MAX_LEN 128
-	
-	///////////*GLOBAL VARIABLES*//////////
-	char IOT_CONFIG_CONNECTION_STRING[200];
+  #define MESSAGE_MAX_LEN 256
+  
+  ///////////*GLOBAL VARIABLES*//////////
+  char IOT_CONFIG_CONNECTION_STRING[200];
   int platformMemory;
-	static struct Reporting PinReporting;
-	static bool DweetData;
-	static struct PinStatus LastPinStatus = {true}; //initialise to true to send out startup state
-	static char factory_settings_stored [3];
-	static bool ConKey;
-	static unsigned int messageCount = 1;
-	static unsigned int ipcount = 540;
-	static int iotcount = -50;
-	static unsigned int WiFiCount = 0;
+  static struct Reporting PinReporting;
+  static bool DweetData;
+  static struct PinStatus LastPinStatus = {true}; //initialise to true to send out startup state
+  static char factory_settings_stored [3];
+  static bool ConKey;
+  static unsigned int messageCount = 1;
+  static unsigned int ipcount = 540;
+  static int iotcount = -50;
+  static unsigned int WiFiCount = 0;
 
 
-	static IOTHUB_CLIENT_LL_HANDLE iotHubClientHandle;
+  static IOTHUB_CLIENT_LL_HANDLE iotHubClientHandle;
 
 
-	void ICACHE_RAM_ATTR onTimerISR(){
-		  WiFiCount++;
-		  iotcount++;
-		  ipcount++;
-		  timer1_write(5000000);//1s
-	}
+  void ICACHE_RAM_ATTR onTimerISR(){
+      WiFiCount++;
+      iotcount++;
+      ipcount++;
+      timer1_write(5000000);//1s
+  }
 
 void setup() {
     Serial.begin(115200);
@@ -142,7 +142,7 @@ void loop() {
   
      handle_client();
      
-	    if (iotcount >= PinReporting.frequency ){
+      if (iotcount >= PinReporting.frequency ){
       if(platformMemory == 1 ){
         if(PinStatusChange() && ConKey ) {
               Serial.println ("11111111111111111111111111111");
@@ -172,7 +172,7 @@ void loop() {
             } 
       }
           
-			   iotcount = 0;
+         iotcount = 0;
         }
 
       if(ipcount >= 600)

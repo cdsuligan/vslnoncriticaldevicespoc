@@ -109,8 +109,7 @@ void handleSettings() {
   bool DweetData;
   EEPROM_readAnything(150, DweetData);
 
-  int PlatformData;
-  EEPROM_readAnything(205,PlatformData);
+
   
 
     String Page = FPSTR(HTTP_HEADER);
@@ -145,37 +144,7 @@ void handleSettings() {
   item.replace("{i6)", "");   
   Page += item; 
 
-  //platform radio buttons
-  item = FPSTR(HTTP_FIELDSET_PARAM);
-  item.replace("{L)", "Platform");
-  item.replace("{i1)", HTTP_INPUT_PARAM);
-  item.replace("{i_t)", "radio");
-  item.replace("{N)", "PlatformState");
-  item.replace("{id}", "PlatformState");
-  item.replace("{V)", "1");
-  if(PlatformData == 1){item.replace("{pf)", "checked");}
-  else{item.replace("{pf)", "");}
-  item.replace("{F)", "IoT Central  ");
-  item.replace("{i2)", HTTP_INPUT_PARAM);
-  item.replace("{i_t)", "radio");
-  item.replace("{N)", "PlatformState");
-  item.replace("{id}", "PlatformState");
-  item.replace("{V)", "2");
-  if(PlatformData == 2){item.replace("{pf)", "checked");}
-  else{item.replace("{pf)", "");}
-  item.replace("{F)", "AWS  ");
-  item.replace("{i3)", HTTP_INPUT_PARAM);
-  item.replace("{i_t)", "radio");
-  item.replace("{N)", "PlatformState");
-  item.replace("{id}", "PlatformState");
-  item.replace("{V)", "3");
-  if(PlatformData == 3){item.replace("{pf)", "checked");}
-  else{item.replace("{pf)", "");}
-  item.replace("{F)", "GCP");
-  item.replace("{i4)", "");
-  item.replace("{i5)", "");
-  item.replace("{i6)", "");
-  Page += item;
+  
 	item = FPSTR(HTTP_FIELDSET_PARAM);
 	item.replace("{L)", "Actions");
 	item.replace("{i1)", "<div>");
@@ -202,10 +171,7 @@ Page += F("'>Link to get IP address</a></p>"
              "$('#set_button').click(function(OnEvent){ OnEvent.preventDefault();"
              "var IPState = $('input[name=IPState]:checked', '#dweetNameForm').val();"
              "$.get('/SetDweet?IPState=' + IPState, function(Dweet){ console.log(Dweet); }); "
-              // Switch Platform
-           "var PlatformState = $('input[name=PlatformState]:checked', '#dweetNameForm').val();"
-             "$.get('/SetPlatform?PlatformState=' + PlatformState, function(Dweet){ console.log(Dweet); }); "
-              //
+              
            "$('#myModal').show();});"
            "$('#closeBtn').click(function(OnEvent){ $('#myModal').hide();});"
            "document.getElementById(\"myIPAnchor\").href = b;"
@@ -731,6 +697,9 @@ void handleConKey() {
   char ConKey[200];
   EEPROM_readAnything(256, ConKey);
 
+  int PlatformData;
+  EEPROM_readAnything(205,PlatformData);
+
     String Page = FPSTR(HTTP_HEADER);
 	Page += FPSTR(HTTP_HEADER_PARAM);
 	Page.replace("{h1}", "Azure IOT Central Connection Key");
@@ -738,22 +707,87 @@ void handleConKey() {
 	Page.replace("{h3}", "");
 	Page.replace("{h4}", "");
 	Page.replace("{f_i)", "ConKeyForm");
-	
-	String item = FPSTR(HTTP_FIELDSET_PARAM);
-	item.replace("{L)", "Connection Key");
-	item.replace("{i1)", HTTP_INPUT_PARAM);
-	item.replace("{i_t)", "text");
-	item.replace("{N)", "ConKey");
-	item.replace("{id}", "ConKey");
-	item.replace("{V)", ConKey);
-	item.replace("{pf)", "size=30 autofocus");
-	item.replace("{F)", "");
-  item.replace("{i2)", "");
-  item.replace("{i3)", "");
+
+  //platform radio buttons
+  String item = FPSTR(HTTP_FIELDSET_PARAM);
+  item.replace("{L)", "Platform");
+  item.replace("{i1)", HTTP_INPUT_PARAM);
+  item.replace("{i_t)", "radio");
+  item.replace("{N)", "PlatformState");
+  item.replace("{id}", "PlatformState");
+  item.replace("{V)", "1");
+  if(PlatformData == 1){item.replace("{pf)", "checked");}
+  else{item.replace("{pf)", "");}
+  item.replace("{F)", "IoT Central  ");
+  item.replace("{i2)", HTTP_INPUT_PARAM);
+  item.replace("{i_t)", "radio");
+  item.replace("{N)", "PlatformState");
+  item.replace("{id}", "PlatformState");
+  item.replace("{V)", "2");
+  if(PlatformData == 2){item.replace("{pf)", "checked");}
+  else{item.replace("{pf)", "");}
+  item.replace("{F)", "AWS  ");
+  item.replace("{i3)", HTTP_INPUT_PARAM);
+  item.replace("{i_t)", "radio");
+  item.replace("{N)", "PlatformState");
+  item.replace("{id}", "PlatformState");
+  item.replace("{V)", "3");
+  if(PlatformData == 3){item.replace("{pf)", "checked");}
+  else{item.replace("{pf)", "");}
+  item.replace("{F)", "GCP");
   item.replace("{i4)", "");
   item.replace("{i5)", "");
   item.replace("{i6)", "");
-	Page += item;
+  Page += item;
+	
+	String item1 = FPSTR(HTTP_FIELDSET_PARAM);
+	item1.replace("{L)", "Azure IoT Central");
+	item1.replace("{i1)", HTTP_INPUT_PARAM);
+	item1.replace("{i_t)", "text");
+	item1.replace("{N)", "ConKey");
+	item1.replace("{id}", "ConKey");
+	item1.replace("{V)", ConKey);
+	item1.replace("{pf)", "size=30 autofocus");
+	item1.replace("{F)", "");
+  item1.replace("{i2)", "");
+  item1.replace("{i3)", "");
+  item1.replace("{i4)", "");
+  item1.replace("{i5)", "");
+  item1.replace("{i6)", "");
+	Page += item1;
+
+  String item2 = FPSTR(HTTP_FIELDSET_PARAM);
+  item2.replace("{L)", "AWS");
+  item2.replace("{i1)", HTTP_INPUT_PARAM);
+  item2.replace("{i_t)", "text");
+  item2.replace("{N)", "ConKey");
+  item2.replace("{id}", "ConKey");
+  item2.replace("{V)", ConKey);
+  item2.replace("{pf)", "size=30 autofocus");
+  item2.replace("{F)", "");
+  item2.replace("{i2)", "");
+  item2.replace("{i3)", "");
+  item2.replace("{i4)", "");
+  item2.replace("{i5)", "");
+  item2.replace("{i6)", "");
+  Page += item2;
+
+  String item3 = FPSTR(HTTP_FIELDSET_PARAM);
+  item3.replace("{L)", "GCP");
+  item3.replace("{i1)", HTTP_INPUT_PARAM);
+  item3.replace("{i_t)", "text");
+  item3.replace("{N)", "ConKey");
+  item3.replace("{id}", "ConKey");
+  item3.replace("{V)", ConKey);
+  item3.replace("{pf)", "size=30 autofocus");
+  item3.replace("{F)", "");
+  item3.replace("{i2)", "");
+  item3.replace("{i3)", "");
+  item3.replace("{i4)", "");
+  item3.replace("{i5)", "");
+  item3.replace("{i6)", "");
+  Page += item3;
+
 
 	item = FPSTR(HTTP_FIELDSET_PARAM);
 	item.replace("{L)", "Actions");
@@ -775,6 +809,10 @@ Page +=   F("<div class=\"modal\" id=\"myModal\" style=\"display: none;\"><div c
              "ConKey = $('#ConKey').val();"
              "url_encode = encodeURIComponent(ConKey);"
              "$.get('/SetConKey?url_encode=' + url_encode, function(url_encode){ console.log(url_encode);});"
+             // Switch Platform
+           "var PlatformState = $('input[name=PlatformState]:checked', '#ConKeyForm').val();"
+             "$.get('/SetPlatform?PlatformState=' + PlatformState, function(Dweet){ console.log(Dweet); }); "
+              //
              "$('#myModal').show();});"
              "$('#closeBtn').click(function(OnEvent){ $('#myModal').hide();});"
            "</script>"
