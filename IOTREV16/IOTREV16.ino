@@ -144,14 +144,22 @@ void loop() {
      
       if (iotcount >= PinReporting.frequency ){
       if(platformMemory == 1 ){
-        if(PinStatusChange() && ConKey ) {
+        if(PinStatusChange() && ConKey ) { ///Only sends data when PinStatusChange
               Serial.println ("11111111111111111111111111111");
               char messagePayload[MESSAGE_MAX_LEN];
               readMessage(messageCount, messagePayload);
               sendMessage(iotHubClientHandle, messagePayload);
               IoTHubFullSendReceive();
               messageCount++;
-            } 
+            }
+         ////////////Sends AC value
+         Serial.println ("This will send AC value");
+         char payloadAC[MESSAGE_MAX_LEN];
+         readMessageAC(messageCount, payloadAC);
+         sendMessage(iotHubClientHandle, payloadAC);
+         IoTHubFullSendReceive();
+         messageCount++;
+         /////////////////////
       } else if(platformMemory == 2 ){
         if(PinStatusChange() && ConKey ) {
               Serial.println ("2222222222222222222222222222222222222222222222222222222222");
@@ -270,6 +278,15 @@ void readMessage(unsigned int messageId, char *payload)
    if(PinReporting.A0State){
      object[PinReporting.A0Name] = String(LastPinStatus.A0Status);
    }
+   
+   object.printTo(payload, MESSAGE_MAX_LEN); //inserting data
+}
+
+void readMessageAC(unsigned int messageId, char *payload)
+{
+   StaticJsonBuffer<MESSAGE_MAX_LEN> jsonBuffer;
+   JsonObject &object = jsonBuffer.createObject();
+   object[PinReporting.messageID] = messageId;
 
    Serial.print("AC: ");
    double A0Value = calcIrms() * PinReporting.A0Scale;
