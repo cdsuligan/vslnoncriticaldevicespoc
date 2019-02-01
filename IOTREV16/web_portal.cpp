@@ -55,33 +55,13 @@ void handle_client(){
 server.handleClient();
 }
 
-void ResetESP() {
 
-      if (!server.authenticate(www_username, www_password)) {
-      return server.requestAuthentication();
-    }
-    ESP.restart();
-}
-
-void FactorySettings() {
-
-      if (!server.authenticate(www_username, www_password)) {
-      return server.requestAuthentication();
-    }
-    EEPROM_writeAnything(200, "NO");
-    ESP.restart();
-}
-
-
-
-void handleRoot()
-{
+void handleRoot(){
     if (!server.authenticate(www_username, www_password)) {
       return server.requestAuthentication();
     }
 
 String Page = FPSTR(HTTP_HEADER);
-
 Page +=	F("<body>"
   			"<h1 align=\"center\">Eff% IoT</h1>"
 			"<h3>Please select a button below</h3>"
@@ -97,269 +77,6 @@ Page +=	F("<body>"
    server.sendHeader("Content-Length", String(Page.length())); 
    server.send ( 200, "text/html", Page );  
 }
-
-
-
-void handleSettings() {
-  
-  if (!server.authenticate(www_username, www_password)) {
-    return server.requestAuthentication();
-  }
-  
-  bool DweetData;
-  EEPROM_readAnything(150, DweetData);
-
-
-  
-
-    String Page = FPSTR(HTTP_HEADER);
-  Page += FPSTR(HTTP_HEADER_PARAM);
-  Page.replace("{h1}", "Setup to broadcast IP address");
-  Page.replace("{h2}", "");
-  Page.replace("{h3}", "");
-  Page.replace("{h4}", "");
-  Page.replace("{f_i)", "dweetNameForm");
-
-  String item = FPSTR(HTTP_FIELDSET_PARAM);
-  item.replace("{L)", "Dweet IP");
-  item.replace("{i1)", HTTP_INPUT_PARAM);
-  item.replace("{i_t)", "radio");
-  item.replace("{N)", "IPState");
-  item.replace("{id}", "IPState");
-  item.replace("{V)", "1");
-  if(DweetData){item.replace("{pf)", "checked");}
-  else{item.replace("{pf)", "");}
-  item.replace("{F)", " ON");
-  item.replace("{i2)", HTTP_INPUT_PARAM); 
-  item.replace("{i_t)", "radio");
-  item.replace("{N)", "IPState");
-  item.replace("{id}", "IPState");
-  item.replace("{V)", "O");
-  if(!DweetData){item.replace("{pf)", "checked");}
-  else{item.replace("{pf)", "");}
-  item.replace("{F)", " OFF");
-  item.replace("{i3)", ""); 
-  item.replace("{i4)", ""); 
-  item.replace("{i5)", ""); 
-  item.replace("{i6)", "");   
-  Page += item; 
-
-  
-	item = FPSTR(HTTP_FIELDSET_PARAM);
-	item.replace("{L)", "Actions");
-	item.replace("{i1)", "<div>");
-	item.replace("{i2)", "<br>");
-	item.replace("{i3)", "<button id=\"set_button\" class=\"button\">Set</button>");
-	item.replace("{i4)", "</div>");
-  item.replace("{i5)", ""); 
-  item.replace("{i6)", "");
-	Page += item; 
-  
-Page +=  F("</br><p><a id=\"myIPAnchor\" href='"); 
-Page += F("https://dweet.io/get/latest/dweet/for/");
-Page += WiFi.macAddress();
-
-Page += F("'>Link to get IP address</a></p>"
-          "</br>"
-          "<a href=FactorySettings>Restore Factory Settings</a>"
-           "<div class=\"modal\" id=\"myModal\" style=\"display: none;\"><div class=\"modal-dialog\">"
-          "<div class=\"modal-content\"><!-- Modal Header --><div class=\"modal-header cont\"><h4 class=\"modal-title\">Changes have been set</h4></div>"
-          "<div class=\"modal-footer cont\">"
-          "<button type=\"button\" class=\"btn btn-danger\" data-dismiss=\"modal\" id=\"closeBtn\">Confirm</button></div></div></div></div>"
-           "<script src=\"https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js\"></script>"
-           "<script>"
-             "$('#set_button').click(function(OnEvent){ OnEvent.preventDefault();"
-             "var IPState = $('input[name=IPState]:checked', '#dweetNameForm').val();"
-             "$.get('/SetDweet?IPState=' + IPState, function(Dweet){ console.log(Dweet); }); "
-              
-           "$('#myModal').show();});"
-           "$('#closeBtn').click(function(OnEvent){ $('#myModal').hide();});"
-           "document.getElementById(\"myIPAnchor\").href = b;"
-           "</script>"
-         "</body>"
-         "</html>");
-   server.send ( 200, "text/html", Page); 
-}
-
-
-
-void handleSaveDweet() {
-
-  if (!server.authenticate(www_username, www_password)) {
-    return server.requestAuthentication();
-  }
-   bool DweetData;
-   if(server.arg("IPState") == "1"){
-       DweetData = true;
-    }
-   else {DweetData = false;}
-   EEPROM_writeAnything(150, DweetData);
-}
-
-void savePlatformState(){
-    if (!server.authenticate(www_username, www_password)) {
-    return server.requestAuthentication();
-  }
-  int platformNo;
-  if(server.arg("PlatformState")=="1"){
-    platformNo = 1; 
-  } else if(server.arg("PlatformState")=="2"){
-    platformNo = 2; 
-  } else if(server.arg("PlatformState")=="3"){
-    platformNo = 3; 
-  }
-  EEPROM_writeAnything(205, platformNo);
-}
-
-   
-void handlePinSet() {
-
-  
-  if (!server.authenticate(www_username, www_password)) {
-    return server.requestAuthentication();
-  }
-	struct ESPPins ReadPinSet;
-	EEPROM_readAnything(128,ReadPinSet);
-  
-  
-  	String Page = FPSTR(HTTP_HEADER);
-	Page += FPSTR(HTTP_HEADER_PARAM);
-	Page.replace("{h1}", "GPIO Pin Set");
-	Page.replace("{h2}", "toggle an output on or off");
-	Page.replace("{h3}", "");
-	Page.replace("{h4}", "");
-	Page.replace("{f_i)", "Pinform");
-	
-	String item = FPSTR(HTTP_FIELDSET_PARAM);
-	item.replace("{L)", "Digital Output 3");
-	item.replace("{i1)", HTTP_INPUT_PARAM);
-	item.replace("{i_t)", "radio");
-	item.replace("{N)", "D3State");
-	item.replace("{id}", "D3State");
-	item.replace("{V)", "D");
-	if(ReadPinSet.D3){item.replace("{pf)", "checked");}
-	else{item.replace("{pf)", "");}
-	item.replace("{F)", " ON");
-	item.replace("{i2)", HTTP_INPUT_PARAM); 
-	item.replace("{i_t)", "radio");
-	item.replace("{N)", "D3State");
-	item.replace("{id}", "D3State");
-	item.replace("{V)", "O");
-	if(!ReadPinSet.D3){item.replace("{pf)", "checked");}
-	else{item.replace("{pf)", "");}
-	item.replace("{F)", " OFF");
-	item.replace("{i3)", ""); 	
-	item.replace("{i4)", "");	
-	item.replace("{i5)", "");	
-	item.replace("{i6)", "");		
-	Page += item;
-
-	item = FPSTR(HTTP_FIELDSET_PARAM);
-	item.replace("{L)", "Digital Output 4");
-	item.replace("{i1)", HTTP_INPUT_PARAM);
-	item.replace("{i_t)", "radio");
-	item.replace("{N)", "D4State");
-	item.replace("{id}", "D4State");
-	item.replace("{V)", "D");
-	if(ReadPinSet.D4){item.replace("{pf)", "checked");}
-	else{item.replace("{pf)", "");}
-	item.replace("{F)", " ON");
-	item.replace("{i2)", HTTP_INPUT_PARAM); 
-	item.replace("{i_t)", "radio");
-	item.replace("{N)", "D4State");
-	item.replace("{id}", "D4State");
-	item.replace("{V)", "O");
-	if(!ReadPinSet.D4){item.replace("{pf)", "checked");}
-	else{item.replace("{pf)", "");}
-	item.replace("{F)", " OFF");
-	item.replace("{i3)", ""); 
-	item.replace("{i4)", "");	
-	item.replace("{i5)", "");	
-	item.replace("{i6)", "");		
-	Page += item;	
-    
- 	item = FPSTR(HTTP_FIELDSET_PARAM);
-	item.replace("{L)", "Digital Output 5");
-	item.replace("{i1)", HTTP_INPUT_PARAM);
-	item.replace("{i_t)", "radio");
-	item.replace("{N)", "D5State");
-	item.replace("{id}", "D5State");
-	item.replace("{V)", "D");
-	if(ReadPinSet.D5){item.replace("{pf)", "checked");}
-	else{item.replace("{pf)", "");}
-	item.replace("{F)", " ON");
-	item.replace("{i2)", HTTP_INPUT_PARAM); 
-	item.replace("{i_t)", "radio");
-	item.replace("{N)", "D5State");
-	item.replace("{id}", "D5State");
-	item.replace("{V)", "O");
-	if(!ReadPinSet.D5){item.replace("{pf)", "checked");}
-	else{item.replace("{pf)", "");}
-	item.replace("{F)", " OFF");
-	item.replace("{i3)", ""); 	
-	item.replace("{i4)", "");	
-	item.replace("{i5)", "");	
-	item.replace("{i6)", "");		
-	Page += item; 
-  
-	item = FPSTR(HTTP_FIELDSET_PARAM);
-	item.replace("{L)", "Analogue Output D6");
-	item.replace("{i1)", HTTP_INPUT_PARAM);
-	item.replace("{i_t)", "radio");
-	item.replace("{N)", "D6State");
-	item.replace("{id}", "D6State");
-	item.replace("{V)", "D");
-	if(ReadPinSet.A6 > 0){item.replace("{pf)", "checked");}
-	else{item.replace("{pf)", "");}
-	item.replace("{F)", " ON");
-	item.replace("{i2)", HTTP_INPUT_PARAM); 
-	item.replace("{i_t)", "radio");
-	item.replace("{N)", "D6State");
-	item.replace("{id}", "D6State");
-	item.replace("{V)", "O");
-	if(ReadPinSet.A6 == false){item.replace("{pf)", "checked");}
-	else{item.replace("{pf)", "");}
-	item.replace("{F)", " OFF &nbsp &nbsp");
-	item.replace("{i3)", HTTP_INPUT_PARAM); 
-	item.replace("{i_t)", "text");
-	item.replace("{N)", "D6Value");
-	item.replace("{id}", "D6Value");
-	item.replace("{V)", String(ReadPinSet.A6)); 	
-	item.replace("{pf)", "size=2 autofocus");
-	item.replace("{F)", " VALUE");	
-	item.replace("{i4)", "");	
-	item.replace("{i5)", "");	
-	item.replace("{i6)", "");		
-	Page += item;	
-
-	item = FPSTR(HTTP_FIELDSET_PARAM);
-	item.replace("{L)", "Actions");
-	item.replace("{i1)", "<div>");
-	item.replace("{i2)", "<br>");
-	item.replace("{i3)", "<button id=\"set_button\" class=\"button\">Set</button>");
-	item.replace("{i4)", "</div>");
-	item.replace("{i5)", "");
-	item.replace("{i6)", "");
-	Page += item;
-
-
-Page += F("<div class=\"modal\" id=\"myModal\" style=\"display: none;\"><div class=\"modal-dialog\">"
-          "<div class=\"modal-content\"><!-- Modal Header --><div class=\"modal-header cont\"><h4 class=\"modal-title\">Changes have been set</h4></div>"
-          "<div class=\"modal-footer cont\">"
-          "<button type=\"button\" class=\"btn btn-danger\" data-dismiss=\"modal\" id=\"closeBtn\">Confirm</button></div></div></div></div>"
-        "<script src=\"https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js\"></script><script>"
-        "var D3State; var D4State; var D5State; var D6State; var D6Value; $('#set_button').click(function(OnEvent){ OnEvent.preventDefault();"
-        "D3State = $('input[name=D3State]:checked', '#Pinform').val(); D4State = $('input[name=D4State]:checked', '#Pinform').val(); D5State = $('input[name=D5State]:checked', '#Pinform').val(); D6State = $('input[name=D6State]:checked', '#Pinform').val();  D6Value = $('#D6Value').val();"
-        "$.get('/set?D3State=' + D3State + '&D4State=' + D4State + '&D5State=' + D5State + '&D6State=' + D6State + '&D6Value=' + D6Value, function(PinState){ console.log(PinState); });"
-        "$('#myModal').show();});"
-        "$('#closeBtn').click(function(OnEvent){ $('#myModal').hide();});"
-        "</script>"
-        "</body>"
-        "</html>");
-
-   server.send ( 200, "text/html", Page);  
-}
-
 
 void handleReporting() {
 
@@ -575,56 +292,6 @@ Page +=	F("<div class=\"modal\" id=\"myModal\" style=\"display: none;\"><div cla
    server.send ( 200, "text/html", Page); 
 }
 
-void handleSet() {
-
-  struct ESPPins WebPortalPinSet;
-
-  if (!server.authenticate(www_username, www_password)) {
-    return server.requestAuthentication();
-  }
-
-  if(server.arg("D3State") == "D")
-  {
-    WebPortalPinSet.D3 = true;
-  }
-  else if(server.arg("D3State") == "O")
-  {
-    WebPortalPinSet.D3 = false;
-  }
-
-  if(server.arg("D4State") == "D")
-  {
-    WebPortalPinSet.D4 = true;
-  }
-  else if(server.arg("D4State") == "O")
-  {
-    WebPortalPinSet.D4 = false;
-  }
-
-  if(server.arg("D5State") == "D")
-  {
-    WebPortalPinSet.D5 = true;
-  }
-  else if(server.arg("D5State") == "O")
-  {
-    WebPortalPinSet.D5 = false;
-  }
-
-  if(server.arg("D6State") == "A")
-  {
-    WebPortalPinSet.A6 = server.arg("D6Value").toInt();
-  }
-  else if(server.arg("D6State") == "O")
-  {
-    WebPortalPinSet.A6 = 0;
-  }
-  
-   EEPROM_writeAnything(128, WebPortalPinSet);
-   SetPins(WebPortalPinSet);
-}
-
-
-
 void handleSaveReport() {
 
   struct Reporting PinReporting;
@@ -686,6 +353,300 @@ void handleSaveReport() {
    strcpy(PinReporting.messageID ,server.arg("messageID").c_str());
    PinReporting.messageID[server.arg("messageID").length()] = '\0'; 
    EEPROM_writeAnything(0, PinReporting); 
+}
+
+void handleSet() {
+
+  struct ESPPins WebPortalPinSet;
+
+  if (!server.authenticate(www_username, www_password)) {
+    return server.requestAuthentication();
+  }
+
+  if(server.arg("D3State") == "D")
+  {
+    WebPortalPinSet.D3 = true;
+  }
+  else if(server.arg("D3State") == "O")
+  {
+    WebPortalPinSet.D3 = false;
+  }
+
+  if(server.arg("D4State") == "D")
+  {
+    WebPortalPinSet.D4 = true;
+  }
+  else if(server.arg("D4State") == "O")
+  {
+    WebPortalPinSet.D4 = false;
+  }
+
+  if(server.arg("D5State") == "D")
+  {
+    WebPortalPinSet.D5 = true;
+  }
+  else if(server.arg("D5State") == "O")
+  {
+    WebPortalPinSet.D5 = false;
+  }
+
+  if(server.arg("D6State") == "A")
+  {
+    WebPortalPinSet.A6 = server.arg("D6Value").toInt();
+  }
+  else if(server.arg("D6State") == "O")
+  {
+    WebPortalPinSet.A6 = 0;
+  }
+  
+   EEPROM_writeAnything(128, WebPortalPinSet);
+   SetPins(WebPortalPinSet);
+}
+
+void handlePinSet() {
+
+  
+  if (!server.authenticate(www_username, www_password)) {
+    return server.requestAuthentication();
+  }
+	struct ESPPins ReadPinSet;
+	EEPROM_readAnything(128,ReadPinSet);
+  
+  
+  	String Page = FPSTR(HTTP_HEADER);
+	Page += FPSTR(HTTP_HEADER_PARAM);
+	Page.replace("{h1}", "GPIO Pin Set");
+	Page.replace("{h2}", "toggle an output on or off");
+	Page.replace("{h3}", "");
+	Page.replace("{h4}", "");
+	Page.replace("{f_i)", "Pinform");
+	
+	String item = FPSTR(HTTP_FIELDSET_PARAM);
+	item.replace("{L)", "Digital Output 3");
+	item.replace("{i1)", HTTP_INPUT_PARAM);
+	item.replace("{i_t)", "radio");
+	item.replace("{N)", "D3State");
+	item.replace("{id}", "D3State");
+	item.replace("{V)", "D");
+	if(ReadPinSet.D3){item.replace("{pf)", "checked");}
+	else{item.replace("{pf)", "");}
+	item.replace("{F)", " ON");
+	item.replace("{i2)", HTTP_INPUT_PARAM); 
+	item.replace("{i_t)", "radio");
+	item.replace("{N)", "D3State");
+	item.replace("{id}", "D3State");
+	item.replace("{V)", "O");
+	if(!ReadPinSet.D3){item.replace("{pf)", "checked");}
+	else{item.replace("{pf)", "");}
+	item.replace("{F)", " OFF");
+	item.replace("{i3)", ""); 	
+	item.replace("{i4)", "");	
+	item.replace("{i5)", "");	
+	item.replace("{i6)", "");		
+	Page += item;
+
+	item = FPSTR(HTTP_FIELDSET_PARAM);
+	item.replace("{L)", "Digital Output 4");
+	item.replace("{i1)", HTTP_INPUT_PARAM);
+	item.replace("{i_t)", "radio");
+	item.replace("{N)", "D4State");
+	item.replace("{id}", "D4State");
+	item.replace("{V)", "D");
+	if(ReadPinSet.D4){item.replace("{pf)", "checked");}
+	else{item.replace("{pf)", "");}
+	item.replace("{F)", " ON");
+	item.replace("{i2)", HTTP_INPUT_PARAM); 
+	item.replace("{i_t)", "radio");
+	item.replace("{N)", "D4State");
+	item.replace("{id}", "D4State");
+	item.replace("{V)", "O");
+	if(!ReadPinSet.D4){item.replace("{pf)", "checked");}
+	else{item.replace("{pf)", "");}
+	item.replace("{F)", " OFF");
+	item.replace("{i3)", ""); 
+	item.replace("{i4)", "");	
+	item.replace("{i5)", "");	
+	item.replace("{i6)", "");		
+	Page += item;	
+    
+ 	item = FPSTR(HTTP_FIELDSET_PARAM);
+	item.replace("{L)", "Digital Output 5");
+	item.replace("{i1)", HTTP_INPUT_PARAM);
+	item.replace("{i_t)", "radio");
+	item.replace("{N)", "D5State");
+	item.replace("{id}", "D5State");
+	item.replace("{V)", "D");
+	if(ReadPinSet.D5){item.replace("{pf)", "checked");}
+	else{item.replace("{pf)", "");}
+	item.replace("{F)", " ON");
+	item.replace("{i2)", HTTP_INPUT_PARAM); 
+	item.replace("{i_t)", "radio");
+	item.replace("{N)", "D5State");
+	item.replace("{id}", "D5State");
+	item.replace("{V)", "O");
+	if(!ReadPinSet.D5){item.replace("{pf)", "checked");}
+	else{item.replace("{pf)", "");}
+	item.replace("{F)", " OFF");
+	item.replace("{i3)", ""); 	
+	item.replace("{i4)", "");	
+	item.replace("{i5)", "");	
+	item.replace("{i6)", "");		
+	Page += item; 
+  
+	item = FPSTR(HTTP_FIELDSET_PARAM);
+	item.replace("{L)", "Analogue Output D6");
+	item.replace("{i1)", HTTP_INPUT_PARAM);
+	item.replace("{i_t)", "radio");
+	item.replace("{N)", "D6State");
+	item.replace("{id}", "D6State");
+	item.replace("{V)", "D");
+	if(ReadPinSet.A6 > 0){item.replace("{pf)", "checked");}
+	else{item.replace("{pf)", "");}
+	item.replace("{F)", " ON");
+	item.replace("{i2)", HTTP_INPUT_PARAM); 
+	item.replace("{i_t)", "radio");
+	item.replace("{N)", "D6State");
+	item.replace("{id}", "D6State");
+	item.replace("{V)", "O");
+	if(ReadPinSet.A6 == false){item.replace("{pf)", "checked");}
+	else{item.replace("{pf)", "");}
+	item.replace("{F)", " OFF &nbsp &nbsp");
+	item.replace("{i3)", HTTP_INPUT_PARAM); 
+	item.replace("{i_t)", "text");
+	item.replace("{N)", "D6Value");
+	item.replace("{id}", "D6Value");
+	item.replace("{V)", String(ReadPinSet.A6)); 	
+	item.replace("{pf)", "size=2 autofocus");
+	item.replace("{F)", " VALUE");	
+	item.replace("{i4)", "");	
+	item.replace("{i5)", "");	
+	item.replace("{i6)", "");		
+	Page += item;	
+
+	item = FPSTR(HTTP_FIELDSET_PARAM);
+	item.replace("{L)", "Actions");
+	item.replace("{i1)", "<div>");
+	item.replace("{i2)", "<br>");
+	item.replace("{i3)", "<button id=\"set_button\" class=\"button\">Set</button>");
+	item.replace("{i4)", "</div>");
+	item.replace("{i5)", "");
+	item.replace("{i6)", "");
+	Page += item;
+
+
+Page += F("<div class=\"modal\" id=\"myModal\" style=\"display: none;\"><div class=\"modal-dialog\">"
+          "<div class=\"modal-content\"><!-- Modal Header --><div class=\"modal-header cont\"><h4 class=\"modal-title\">Changes have been set</h4></div>"
+          "<div class=\"modal-footer cont\">"
+          "<button type=\"button\" class=\"btn btn-danger\" data-dismiss=\"modal\" id=\"closeBtn\">Confirm</button></div></div></div></div>"
+        "<script src=\"https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js\"></script><script>"
+        "var D3State; var D4State; var D5State; var D6State; var D6Value; $('#set_button').click(function(OnEvent){ OnEvent.preventDefault();"
+        "D3State = $('input[name=D3State]:checked', '#Pinform').val(); D4State = $('input[name=D4State]:checked', '#Pinform').val(); D5State = $('input[name=D5State]:checked', '#Pinform').val(); D6State = $('input[name=D6State]:checked', '#Pinform').val();  D6Value = $('#D6Value').val();"
+        "$.get('/set?D3State=' + D3State + '&D4State=' + D4State + '&D5State=' + D5State + '&D6State=' + D6State + '&D6Value=' + D6Value, function(PinState){ console.log(PinState); });"
+        "$('#myModal').show();});"
+        "$('#closeBtn').click(function(OnEvent){ $('#myModal').hide();});"
+        "</script>"
+        "</body>"
+        "</html>");
+
+   server.send ( 200, "text/html", Page);  
+}
+
+void ResetESP() {
+
+      if (!server.authenticate(www_username, www_password)) {
+      return server.requestAuthentication();
+    }
+    ESP.restart();
+}
+
+void FactorySettings() {
+
+      if (!server.authenticate(www_username, www_password)) {
+      return server.requestAuthentication();
+    }
+    EEPROM_writeAnything(200, "NO");
+    ESP.restart();
+}
+
+void handleSettings() {
+  
+  if (!server.authenticate(www_username, www_password)) {
+    return server.requestAuthentication();
+  }
+  
+  bool DweetData;
+  EEPROM_readAnything(150, DweetData);
+
+
+  
+
+    String Page = FPSTR(HTTP_HEADER);
+  Page += FPSTR(HTTP_HEADER_PARAM);
+  Page.replace("{h1}", "Setup to broadcast IP address");
+  Page.replace("{h2}", "");
+  Page.replace("{h3}", "");
+  Page.replace("{h4}", "");
+  Page.replace("{f_i)", "dweetNameForm");
+
+  String item = FPSTR(HTTP_FIELDSET_PARAM);
+  item.replace("{L)", "Dweet IP");
+  item.replace("{i1)", HTTP_INPUT_PARAM);
+  item.replace("{i_t)", "radio");
+  item.replace("{N)", "IPState");
+  item.replace("{id}", "IPState");
+  item.replace("{V)", "1");
+  if(DweetData){item.replace("{pf)", "checked");}
+  else{item.replace("{pf)", "");}
+  item.replace("{F)", " ON");
+  item.replace("{i2)", HTTP_INPUT_PARAM); 
+  item.replace("{i_t)", "radio");
+  item.replace("{N)", "IPState");
+  item.replace("{id}", "IPState");
+  item.replace("{V)", "O");
+  if(!DweetData){item.replace("{pf)", "checked");}
+  else{item.replace("{pf)", "");}
+  item.replace("{F)", " OFF");
+  item.replace("{i3)", ""); 
+  item.replace("{i4)", ""); 
+  item.replace("{i5)", ""); 
+  item.replace("{i6)", "");   
+  Page += item; 
+
+  
+	item = FPSTR(HTTP_FIELDSET_PARAM);
+	item.replace("{L)", "Actions");
+	item.replace("{i1)", "<div>");
+	item.replace("{i2)", "<br>");
+	item.replace("{i3)", "<button id=\"set_button\" class=\"button\">Set</button>");
+	item.replace("{i4)", "</div>");
+  item.replace("{i5)", ""); 
+  item.replace("{i6)", "");
+	Page += item; 
+  
+Page +=  F("</br><p><a id=\"myIPAnchor\" href='"); 
+Page += F("https://dweet.io/get/latest/dweet/for/");
+Page += WiFi.macAddress();
+
+Page += F("'>Link to get IP address</a></p>"
+          "</br>"
+          "<a href=FactorySettings>Restore Factory Settings</a>"
+           "<div class=\"modal\" id=\"myModal\" style=\"display: none;\"><div class=\"modal-dialog\">"
+          "<div class=\"modal-content\"><!-- Modal Header --><div class=\"modal-header cont\"><h4 class=\"modal-title\">Changes have been set</h4></div>"
+          "<div class=\"modal-footer cont\">"
+          "<button type=\"button\" class=\"btn btn-danger\" data-dismiss=\"modal\" id=\"closeBtn\">Confirm</button></div></div></div></div>"
+           "<script src=\"https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js\"></script>"
+           "<script>"
+             "$('#set_button').click(function(OnEvent){ OnEvent.preventDefault();"
+             "var IPState = $('input[name=IPState]:checked', '#dweetNameForm').val();"
+             "$.get('/SetDweet?IPState=' + IPState, function(Dweet){ console.log(Dweet); }); "
+              
+           "$('#myModal').show();});"
+           "$('#closeBtn').click(function(OnEvent){ $('#myModal').hide();});"
+           "document.getElementById(\"myIPAnchor\").href = b;"
+           "</script>"
+         "</body>"
+         "</html>");
+   server.send ( 200, "text/html", Page); 
 }
 
 void handleConKey() {
@@ -822,7 +783,6 @@ Page +=   F("<div class=\"modal\" id=\"myModal\" style=\"display: none;\"><div c
    server.send ( 200, "text/html", Page);  
 }
 
-
 void handleSaveConKey() {
 
   if (!server.authenticate(www_username, www_password)) {
@@ -833,4 +793,32 @@ void handleSaveConKey() {
    strcpy(ConKey, s.c_str());
    ConKey[s.length()] = '\0'; //add the null terminator at the end of the string
    EEPROM_writeAnything(256, ConKey);   
+}
+
+void handleSaveDweet() {
+
+  if (!server.authenticate(www_username, www_password)) {
+    return server.requestAuthentication();
+  }
+   bool DweetData;
+   if(server.arg("IPState") == "1"){
+       DweetData = true;
+    }
+   else {DweetData = false;}
+   EEPROM_writeAnything(150, DweetData);
+}
+
+void savePlatformState(){
+    if (!server.authenticate(www_username, www_password)) {
+    return server.requestAuthentication();
+  }
+  int platformNo;
+  if(server.arg("PlatformState")=="1"){
+    platformNo = 1; 
+  } else if(server.arg("PlatformState")=="2"){
+    platformNo = 2; 
+  } else if(server.arg("PlatformState")=="3"){
+    platformNo = 3; 
+  }
+  EEPROM_writeAnything(205, platformNo);
 }
