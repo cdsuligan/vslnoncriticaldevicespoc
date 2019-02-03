@@ -54,5 +54,8 @@ void handleSaveConKey();
 void handleSaveResponse();
 
 void savePlatformState();
-
+///
+void handlePinSetReporting();
+void PinRepSave();
+///
 #endif /* WEB_PORTAL_H */
