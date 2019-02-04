@@ -22,7 +22,7 @@
 #include <Arduino.h>
 #include <Stream.h>
 #include <ESP8266WiFiMulti.h>
-#include <AmazonIOTClient.h>
+#include "AmazonIOTClient.h"
 
 //AWS
 #include "sha256.h"
@@ -30,7 +30,7 @@
 
 //WEBSockets
 #include <Hash.h>
-#include <WebSocketsClient.h>
+#include "WebSocketsClient.h"
 
 //MQTT PUBSUBCLIENT LIB
 #include <PubSubClient.h>
@@ -66,13 +66,14 @@ static bool ConKey;
 static unsigned int messageCount = 1;
 static unsigned int ipcount = 540;
 static int iotcount = -50;
+static int platformMemory;
 static unsigned int WiFiCount = 0;
 static IOTHUB_CLIENT_LL_HANDLE iotHubClientHandle;
 
 //////AWS credentials
 char aws_endpoint[]    = "a3pidz6hu6hupb-ats.iot.ap-southeast-2.amazonaws.com";
-char aws_key[]         = "AKIAIUF7VODNJYWAVT4Q";
-char aws_secret[]      = "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";
+char aws_key[]         = "AKIAJ5LIVGGR4QAOIDLA";
+char aws_secret[]      = "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";
 char aws_region[]      = "ap-southeast-2";
 const char* aws_topic  = "$aws/things/IoTTestArduino/shadow/update";
 int port = 443;
@@ -189,6 +190,7 @@ void setup() {
   // wifiManager.setSTAStaticIPConfig(IPAddress(192,168,1,240), IPAddress(192,168,1,1), IPAddress(0,0,0,0));
   wifiManager.autoConnect("AutoConnectAP", "administrator");
   start_server();
+
   Serial.println (F("HTTP server started"));
   EEPROM_readAnything(205, platformMemory);
   Serial.println (platformMemory);
@@ -217,10 +219,6 @@ void setup() {
     awsWSclient.setAWSSecretKey(aws_secret);
     awsWSclient.setUseSSL(true);
 
-    if (connect()) {
-      subscribe();
-      sendAWSMessage();
-    }
 
     ///////////////When the user has chosen GCP
   } else if (platformMemory == 3) {
@@ -281,14 +279,14 @@ void loop() {
       messageCount++;
       /////////////////////
     } else if (platformMemory == 2 ) {
-      if (PinStatusChange() && ConKey ) {
+   
         Serial.println ("2222222222222222222222222222222222222222222222222222222222");
-        char messagePayload[MESSAGE_MAX_LEN];
-        readMessage(messageCount, messagePayload);
-        sendMessage(iotHubClientHandle, messagePayload);
-        IoTHubFullSendReceive();
-        messageCount++;
-      }
+        if (connect()) {
+          subscribe();
+          sendAWSMessage();
+        }
+
+      
     } else if (platformMemory == 3 ) {
       if (PinStatusChange() && ConKey ) {
         Serial.println ("3333333333333333333333333333");
