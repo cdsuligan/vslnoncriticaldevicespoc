@@ -72,8 +72,8 @@ static IOTHUB_CLIENT_LL_HANDLE iotHubClientHandle;
 
 //////AWS credentials
 char aws_endpoint[]    = "a3pidz6hu6hupb-ats.iot.ap-southeast-2.amazonaws.com";
-char aws_key[]         = "AKIAJ5LIVGGR4QAOIDLA";
-char aws_secret[]      = "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";
+char aws_key[]         = "AKIAJS5X2IKLMZWMPZSQ";
+char aws_secret[]      = "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";
 char aws_region[]      = "ap-southeast-2";
 const char* aws_topic  = "$aws/things/IoTTestArduino/shadow/update";
 int port = 443;
@@ -151,8 +151,14 @@ void sendAWSMessage() {
   char* cTemp = "90";
   char* cHumid = "55";
   char shadow[256];
+  double A0Value = calcIrms() * PinReporting.A0Scale;
+  String asd = String(A0Value);
+  char aa[256];
+  asd.toCharArray(aa,256);
   strcpy(shadow, "{\"state\":{\"reported\": {\"Humidity\":");
   strcat(shadow, cHumid);
+  strcat(shadow, ", \"AC\":");
+  strcat(shadow, aa);
   strcat(shadow, ", \"Temperature\":");
   strcat(shadow, cTemp);
   strcat(shadow, "}}}");
@@ -279,13 +285,11 @@ void loop() {
       messageCount++;
       /////////////////////
     } else if (platformMemory == 2 ) {
-   
         Serial.println ("2222222222222222222222222222222222222222222222222222222222");
         if (connect()) {
           subscribe();
           sendAWSMessage();
-        }
-
+                       }
       
     } else if (platformMemory == 3 ) {
       if (PinStatusChange() && ConKey ) {

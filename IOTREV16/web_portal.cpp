@@ -784,7 +784,7 @@ Page +=   F("<div class=\"modal\" id=\"myModal\" style=\"display: none;\"><div c
           "<div class=\"modal-footer cont\">"
           "<button type=\"button\" class=\"btn btn-danger\" data-dismiss=\"modal\" id=\"closeBtn\">Confirm</button></div></div></div></div>"
   "<script src=\"https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js\"></script>"
-           "<script>"
+           "<script>"           
              "var url_encode; var ConKey; $('#set_button').click(function(OnEvent){ OnEvent.preventDefault();"
              "ConKey = $('#ConKey').val();"
              "url_encode = encodeURIComponent(ConKey);"
