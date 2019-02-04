@@ -39,7 +39,6 @@ void start_server(){
 
     server.on("/PinSetReporting", handlePinSetReporting);
     server.on ("/setReporting", handleSaveReport);
-    server.on ("/set", handleSet);
     server.on ("/ResetESP", ResetESP);
     server.on ("/FactorySettings", FactorySettings); 
     server.on ("/Settings", handleSettings);
@@ -85,7 +84,7 @@ String Page = FPSTR(HTTP_HEADER);
 Page +=	F("<body>"
   			"<h1 align=\"center\">Eff% IoT</h1>"
 			"<h3>Please select a button below</h3>"
-        "<a href=PinSetReporting>Pin & Input Analytics</a>"
+        "<a href=PinSetReporting>Input Analytics</a>"
   			"</br>"
   			"<a href=ConKey>IOT Connection Key</a>"
   			"</br>"
@@ -211,7 +210,6 @@ void savePlatformState(){
 
 
 
-//////////////////////////////////
 
 void handlePinSetReporting(){
 
@@ -228,122 +226,13 @@ void handlePinSetReporting(){
 
     String Page = FPSTR(HTTP_HEADER);
   Page += FPSTR(HTTP_HEADER_PARAM);
-  Page.replace("{h1}", "GPIO Pin Set & Azure Setup");
-  Page.replace("{h2}", "Toggle an output on or off");
+  Page.replace("{h1}", "Azure Setup");
+  Page.replace("{h2}", "");
   Page.replace("{h3}", "");
   Page.replace("{h4}", "");
   Page.replace("{f_i)", "Pinform");
   
   String item = FPSTR(HTTP_FIELDSET_PARAM);
-  item.replace("{L)", "Digital Output 3");
-  item.replace("{i1)", HTTP_INPUT_PARAM);
-  item.replace("{i_t)", "radio");
-  item.replace("{N)", "D3State");
-  item.replace("{id}", "D3State");
-  item.replace("{V)", "D");
-  if(ReadPinSet.D3){item.replace("{pf)", "checked");}
-  else{item.replace("{pf)", "");}
-  item.replace("{F)", " ON");
-  item.replace("{i2)", HTTP_INPUT_PARAM); 
-  item.replace("{i_t)", "radio");
-  item.replace("{N)", "D3State");
-  item.replace("{id}", "D3State");
-  item.replace("{V)", "O");
-  if(!ReadPinSet.D3){item.replace("{pf)", "checked");}
-  else{item.replace("{pf)", "");}
-  item.replace("{F)", " OFF");
-  item.replace("{i3)", "");   
-  item.replace("{i4)", ""); 
-  item.replace("{i5)", ""); 
-  item.replace("{i6)", "");   
-  Page += item;
-
-  item = FPSTR(HTTP_FIELDSET_PARAM);
-  item.replace("{L)", "Digital Output 4");
-  item.replace("{i1)", HTTP_INPUT_PARAM);
-  item.replace("{i_t)", "radio");
-  item.replace("{N)", "D4State");
-  item.replace("{id}", "D4State");
-  item.replace("{V)", "D");
-  if(ReadPinSet.D4){item.replace("{pf)", "checked");}
-  else{item.replace("{pf)", "");}
-  item.replace("{F)", " ON");
-  item.replace("{i2)", HTTP_INPUT_PARAM); 
-  item.replace("{i_t)", "radio");
-  item.replace("{N)", "D4State");
-  item.replace("{id}", "D4State");
-  item.replace("{V)", "O");
-  if(!ReadPinSet.D4){item.replace("{pf)", "checked");}
-  else{item.replace("{pf)", "");}
-  item.replace("{F)", " OFF");
-  item.replace("{i3)", ""); 
-  item.replace("{i4)", ""); 
-  item.replace("{i5)", ""); 
-  item.replace("{i6)", "");   
-  Page += item; 
-    
-  item = FPSTR(HTTP_FIELDSET_PARAM);
-  item.replace("{L)", "Digital Output 5");
-  item.replace("{i1)", HTTP_INPUT_PARAM);
-  item.replace("{i_t)", "radio");
-  item.replace("{N)", "D5State");
-  item.replace("{id}", "D5State");
-  item.replace("{V)", "D");
-  if(ReadPinSet.D5){item.replace("{pf)", "checked");}
-  else{item.replace("{pf)", "");}
-  item.replace("{F)", " ON");
-  item.replace("{i2)", HTTP_INPUT_PARAM); 
-  item.replace("{i_t)", "radio");
-  item.replace("{N)", "D5State");
-  item.replace("{id}", "D5State");
-  item.replace("{V)", "O");
-  if(!ReadPinSet.D5){item.replace("{pf)", "checked");}
-  else{item.replace("{pf)", "");}
-  item.replace("{F)", " OFF");
-  item.replace("{i3)", "");   
-  item.replace("{i4)", ""); 
-  item.replace("{i5)", ""); 
-  item.replace("{i6)", "");   
-  Page += item; 
-  
-  item = FPSTR(HTTP_FIELDSET_PARAM);
-  item.replace("{L)", "Output D6");
-  item.replace("{i1)", HTTP_INPUT_PARAM);
-  item.replace("{i_t)", "radio");
-  item.replace("{N)", "D6State");
-  item.replace("{id}", "D6State");
-  item.replace("{V)", "D");
-  if(ReadPinSet.A6 > 0){item.replace("{pf)", "checked");}
-  else{item.replace("{pf)", "");}
-  item.replace("{F)", " ON");
-  item.replace("{i2)", HTTP_INPUT_PARAM); 
-  item.replace("{i_t)", "radio");
-  item.replace("{N)", "D6State");
-  item.replace("{id}", "D6State");
-  item.replace("{V)", "O");
-  if(ReadPinSet.A6 == false){item.replace("{pf)", "checked");}
-  else{item.replace("{pf)", "");}
-  item.replace("{F)", " OFF &nbsp &nbsp");
-  item.replace("{i3)", HTTP_INPUT_PARAM); 
-  item.replace("{i_t)", "text");
-  item.replace("{N)", "D6Value");
-  item.replace("{id}", "D6Value");
-  item.replace("{V)", String(ReadPinSet.A6));   
-  item.replace("{pf)", "size=2 autofocus");
-  item.replace("{F)", " VALUE");  
-  item.replace("{i4)", ""); 
-  item.replace("{i5)", ""); 
-  item.replace("{i6)", "");   
-  Page += item;
-
-  Page += FPSTR(HTTP_HEADER_PARAM);
-  Page.replace("{h1}", "");
-  Page.replace("{h2}", "Input Analytics");
-  Page.replace("{h3}", "");
-  Page.replace("{h4}", "");
-  Page.replace("{f_i)", "Pinform");
-
-  item = FPSTR(HTTP_FIELDSET_PARAM);
   item.replace("{F)", "");
   item.replace("{L)", "Digital Input 0");
   item.replace("{i1)", HTTP_INPUT_PARAM);
@@ -531,17 +420,10 @@ void handlePinSetReporting(){
           "<div class=\"modal-footer cont\">"
           "<button type=\"button\" class=\"btn btn-danger\" data-dismiss=\"modal\" id=\"closeBtn\">Confirm</button></div></div></div></div>"
         "<script src=\"https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js\"></script><script>"
-        
-        "var D3State; var D4State; var D5State; var D6State; var D6Value; $('#set_button').click(function(OnEvent){ OnEvent.preventDefault();"
-        "D3State = $('input[name=D3State]:checked', '#Pinform').val(); D4State = $('input[name=D4State]:checked', '#Pinform').val(); D5State = $('input[name=D5State]:checked', '#Pinform').val(); D6State = $('input[name=D6State]:checked', '#Pinform').val();  D6Value = $('#D6Value').val();"
-        "$.get('/set?D3State=' + D3State + '&D4State=' + D4State + '&D5State=' + D5State + '&D6State=' + D6State + '&D6Value=' + D6Value, function(PinState){ console.log(PinState); });"
-        "var D0State;var D1State;var D2State;var A0State;var D0Name;var D1Name;var D2Name;var A0Name;var frequency; var A0Scale; var messageID; var A0Threshold;"
-        
+        "var D0State;var D1State;var D2State;var A0State;var D0Name;var D1Name;var D2Name;var A0Name;var frequency; var A0Scale; var messageID; var A0Threshold; $('#set_button').click(function(OnEvent){ OnEvent.preventDefault();"
         "D0State = $('input[name=D0State]:checked', '#Pinform').val(); D1State = $('input[name=D1State]:checked', '#Pinform').val(); D2State = $('input[name=D2State]:checked', '#Pinform').val(); A0State = $('input[name=A0State]:checked', '#Pinform').val(); "
         "D0Name = $('#D0Name').val(); D1Name = $('#D1Name').val(); D2Name = $('#D2Name').val(); A0Name = $('#A0Name').val(); frequency = $('#frequency').val(); A0Scale = $('#A0Scale').val(); messageID = $('#messageID').val(); A0Threshold = $('#A0Threshold').val();"
-        "$.get('/setReporting?D0State=' + D0State + '&D1State=' + D1State + '&D2State=' + D2State + '&A0State=' + A0State + '&D0Name=' + D0Name + '&D1Name=' + D1Name + '&D2Name=' + D2Name + '&A0Name=' + A0Name + '&frequency=' + frequency + '&A0Scale=' + A0Scale + '&messageID=' + messageID + '&A0Threshold=' + A0Threshold);"
-
-        
+        "$.get('/setReporting?D0State=' + D0State + '&D1State=' + D1State + '&D2State=' + D2State + '&A0State=' + A0State + '&D0Name=' + D0Name + '&D1Name=' + D1Name + '&D2Name=' + D2Name + '&A0Name=' + A0Name + '&frequency=' + frequency + '&A0Scale=' + A0Scale + '&messageID=' + messageID + '&A0Threshold=' + A0Threshold, function(PinState){ console.log(PinState);});"
         "$('#myModal').show();});"
         "$('#closeBtn').click(function(OnEvent){ $('#myModal').hide();});"
         "</script>"
@@ -550,56 +432,6 @@ void handlePinSetReporting(){
 
    server.send ( 200, "text/html", Page);  
   
-}
-
-
-
-void handleSet() {
-
-  struct ESPPins WebPortalPinSet;
-
-  if (!server.authenticate(www_username, www_password)) {
-    return server.requestAuthentication();
-  }
-
-  if(server.arg("D3State") == "D")
-  {
-    WebPortalPinSet.D3 = true;
-  }
-  else if(server.arg("D3State") == "O")
-  {
-    WebPortalPinSet.D3 = false;
-  }
-
-  if(server.arg("D4State") == "D")
-  {
-    WebPortalPinSet.D4 = true;
-  }
-  else if(server.arg("D4State") == "O")
-  {
-    WebPortalPinSet.D4 = false;
-  }
-
-  if(server.arg("D5State") == "D")
-  {
-    WebPortalPinSet.D5 = true;
-  }
-  else if(server.arg("D5State") == "O")
-  {
-    WebPortalPinSet.D5 = false;
-  }
-
-  if(server.arg("D6State") == "A")
-  {
-    WebPortalPinSet.A6 = server.arg("D6Value").toInt();
-  }
-  else if(server.arg("D6State") == "O")
-  {
-    WebPortalPinSet.A6 = 0;
-  }
-  
-   EEPROM_writeAnything(128, WebPortalPinSet);
-   SetPins(WebPortalPinSet);
 }
 
 
@@ -784,7 +616,7 @@ Page +=   F("<div class=\"modal\" id=\"myModal\" style=\"display: none;\"><div c
           "<div class=\"modal-footer cont\">"
           "<button type=\"button\" class=\"btn btn-danger\" data-dismiss=\"modal\" id=\"closeBtn\">Confirm</button></div></div></div></div>"
   "<script src=\"https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js\"></script>"
-           "<script>"           
+           "<script>"
              "var url_encode; var ConKey; $('#set_button').click(function(OnEvent){ OnEvent.preventDefault();"
              "ConKey = $('#ConKey').val();"
              "url_encode = encodeURIComponent(ConKey);"
