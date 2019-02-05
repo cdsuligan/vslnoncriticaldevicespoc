@@ -89,6 +89,85 @@ PubSubClient client(awsWSclient);
 //# of connections
 long connection = 0;
 
+//generate random mqtt clientID
+char* generateClientID () {
+  char* cID = new char[23]();
+  for (int i = 0; i < 22; i += 1)
+    cID[i] = (char)random(1, 256);
+  return cID;
+}
+
+//callback to handle mqtt messages
+void callback(char* topic, byte* payload, unsigned int length) {
+  Serial.print("Message arrived [");
+  Serial.print(topic);
+  Serial.print("] ");
+  Serial.println();
+  for (int i = 0; i < length; i++) {
+    Serial.print((char)payload[i]);
+  }
+  Serial.println();
+}
+
+//connects to websocket layer and mqtt layer
+bool connect () {
+  if (client.connected()) {
+    client.disconnect ();
+  }
+  //delay is not necessary... it just help us to get a "trustful" heap space value
+  delay (1000);
+  Serial.print (millis ());
+  Serial.print (" - conn: ");
+  Serial.print (++connection);
+  Serial.print (" - (");
+  Serial.print (ESP.getFreeHeap ());
+  Serial.println (")");
+
+  //creating random client id
+  char* clientID = generateClientID ();
+
+  client.setServer(aws_endpoint, port);
+  if (client.connect(clientID)) {
+    Serial.println("connected");
+    return true;
+  } else {
+    Serial.print("failed, rc=");
+    Serial.print(client.state());
+    return false;
+  }
+}
+
+//subscribe to a mqtt topic
+void subscribe () {
+  client.setCallback(callback);
+  client.subscribe(aws_topic);
+  //subscript to a topic
+  Serial.println("MQTT subscribed");
+}
+
+//send a message to a mqtt topic
+void sendAWSMessage() {
+
+  char* cTemp = "90";
+  char* cHumid = "55";
+  char shadow[256];
+  double A0Value = calcIrms() * PinReporting.A0Scale;
+  String asd = String(A0Value);
+  char aa[256];
+  asd.toCharArray(aa,256);
+  strcpy(shadow, "{\"state\":{\"reported\": {\"Humidity\":");
+  strcat(shadow, cHumid);
+  strcat(shadow, ", \"AC\":");
+  strcat(shadow, aa);
+  strcat(shadow, ", \"Temperature\":");
+  strcat(shadow, cTemp);
+  strcat(shadow, "}}}");
+
+  int rc = client.publish(aws_topic, shadow);
+  Serial.println(shadow);
+  delay (6000);
+}
+
 void ICACHE_RAM_ATTR onTimerISR() {
   WiFiCount++;
   iotcount++;
@@ -109,8 +188,12 @@ void setup() {
   SetPins(PinSet);
 
   /////WiFi
+  //WiFiManager
   WiFiManager wifiManager;
+  //reset saved settings
+  //wifiManager.resetSettings();
   wifiManager.setConfigPortalTimeout(180);
+  // wifiManager.setSTAStaticIPConfig(IPAddress(192,168,1,240), IPAddress(192,168,1,1), IPAddress(0,0,0,0));
   wifiManager.autoConnect("AutoConnectAP", "administrator");
   start_server();
 
@@ -142,6 +225,7 @@ void setup() {
     awsWSclient.setAWSSecretKey(aws_secret);
     awsWSclient.setUseSSL(true);
 
+
     ///////////////When the user has chosen GCP
   } else if (platformMemory == 3) {
     Serial.println ("User has chosen GCP");
@@ -157,6 +241,7 @@ void setup() {
     }
   }
 
+
   //read all settings from EEPROM
   EEPROM_readAnything(0, PinReporting);
   EEPROM_readAnything(150, DweetData);
@@ -167,6 +252,8 @@ void setup() {
   pinMode(D1, INPUT_PULLUP);
   pinMode(D2, INPUT_PULLUP);
   //pinMode(A0,INPUT);//not sure if this is required
+
+
 
   timer1_attachInterrupt(onTimerISR);
   timer1_enable(TIM_DIV16, TIM_EDGE, TIM_SINGLE);
@@ -198,12 +285,12 @@ void loop() {
       messageCount++;
       /////////////////////
     } else if (platformMemory == 2 ) {
-      Serial.println ("2222222222222222222222222222222222222222222222222222222222");
-      if (connect()) {
-        subscribe();
-        sendAWSMessage();
-      }
-
+        Serial.println ("2222222222222222222222222222222222222222222222222222222222");
+        if (connect()) {
+          subscribe();
+          sendAWSMessage();
+                       }
+      
     } else if (platformMemory == 3 ) {
       if (PinStatusChange() && ConKey ) {
         Serial.println ("3333333333333333333333333333");
@@ -365,103 +452,7 @@ static void sendCallback(IOTHUB_CLIENT_CONFIRMATION_RESULT result, void *userCon
   {
     Serial.println(F("Failed message to IoT Hub"));
   }
-}
 
-//generate random mqtt clientID
-char* generateClientID () {
-  char* cID = new char[23]();
-  for (int i = 0; i < 22; i += 1)
-    cID[i] = (char)random(1, 256);
-  return cID;
-}
-
-//callback to handle mqtt messages
-void callback(char* topic, byte* payload, unsigned int length) {
-  Serial.print("Message arrived [");
-  Serial.print(topic);
-  Serial.print("] ");
-  Serial.println();
-  for (int i = 0; i < length; i++) {
-    Serial.print((char)payload[i]);
-  }
-  Serial.println();
-}
-
-//connects to websocket layer and mqtt layer
-bool connect () {
-  if (client.connected()) {
-    client.disconnect ();
-  }
-  //delay is not necessary... it just help us to get a "trustful" heap space value
-  delay (1000);
-  Serial.print (millis ());
-  Serial.print (" - conn: ");
-  Serial.print (++connection);
-  Serial.print (" - (");
-  Serial.print (ESP.getFreeHeap ());
-  Serial.println (")");
-
-  //creating random client id
-  char* clientID = generateClientID ();
-
-  client.setServer(aws_endpoint, port);
-  if (client.connect(clientID)) {
-    Serial.println("connected");
-    return true;
-  } else {
-    Serial.print("failed, rc=");
-    Serial.print(client.state());
-    return false;
-  }
-}
-
-//subscribe to a mqtt topic
-void subscribe () {
-  client.setCallback(callback);
-  client.subscribe(aws_topic);
-  //subscript to a topic
-  Serial.println("MQTT subscribed");
-}
-
-//send a message to a mqtt topic
-void sendAWSMessage() {
-
-  char* cTemp = "90";
-  char* cHumid = "55";
-  char shadow[256];
-  double A0Value = calcIrms() * PinReporting.A0Scale;
-  String aZeroValue = String(A0Value);
-  char aa[256];
-  aZeroValue.toCharArray(aa, 256);
-  char dZero[256];
-  char dOne[256];
-  char dTwo[256];
-  char aZero[256];
-
-  if (PinReporting.D0State) {
-    String(LastPinStatus.D0Status).toCharArray(dZero,256);
-  }
-  if (PinReporting.D1State) {
-    String(LastPinStatus.D1Status).toCharArray(dOne,256);
-  }
-  if (PinReporting.D2State){
-    String(LastPinStatus.D2Status).toCharArray(dTwo,256) ;
-  }
-  if (PinReporting.A0State){
-    String(LastPinStatus.A0Status).toCharArray(aZero,256) ;
-  }
-
-  strcpy(shadow, "{\"state\":{\"reported\": {\"Humidity\":");
-  strcat(shadow, dZero);
-  strcat(shadow, ", \"AC\":");
-  strcat(shadow, aa);
-  strcat(shadow, ", \"Temperature\":");
-  strcat(shadow, cTemp);
-  strcat(shadow, "}}}");
-
-  int rc = client.publish(aws_topic, shadow);
-  Serial.println(shadow);
-  delay (6000);
 }
 
 char PinStatusChange() {

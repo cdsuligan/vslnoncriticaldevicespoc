@@ -20,7 +20,7 @@ const char HTTP_HEADER[] PROGMEM = R"=====(
     <style> .cont{ margin-left: 5%;}</style>
     )=====";
 
-const char HTTP_FIELDSET_PARAM[] PROGMEM  = "<fieldset><legend>{L)</legend>{i1){i2){i3){i4){i5){i6)</fieldset>";
+const char HTTP_FIELDSET_PARAM[] PROGMEM  = "<fieldset id='{f_id)'><legend>{L)</legend>{i1){i2){i3){i4){i5){i6)</fieldset>";
 										
 const char HTTP_INPUT_PARAM[] PROGMEM  =	"<input type='{i_t)'name='{N)'id='{id}'value='{V)'{pf)>{F)";								
 
@@ -526,7 +526,7 @@ void handleConKey() {
   item.replace("{i1)", HTTP_INPUT_PARAM);
   item.replace("{i_t)", "radio");
   item.replace("{N)", "PlatformState");
-  item.replace("{id}", "PlatformState");
+  item.replace("{id}", "PlatformState1");
   item.replace("{V)", "1");
   if(PlatformData == 1){item.replace("{pf)", "checked");}
   else{item.replace("{pf)", "");}
@@ -534,7 +534,7 @@ void handleConKey() {
   item.replace("{i2)", HTTP_INPUT_PARAM);
   item.replace("{i_t)", "radio");
   item.replace("{N)", "PlatformState");
-  item.replace("{id}", "PlatformState");
+  item.replace("{id}", "PlatformState2");
   item.replace("{V)", "2");
   if(PlatformData == 2){item.replace("{pf)", "checked");}
   else{item.replace("{pf)", "");}
@@ -542,7 +542,7 @@ void handleConKey() {
   item.replace("{i3)", HTTP_INPUT_PARAM);
   item.replace("{i_t)", "radio");
   item.replace("{N)", "PlatformState");
-  item.replace("{id}", "PlatformState");
+  item.replace("{id}", "PlatformState3");
   item.replace("{V)", "3");
   if(PlatformData == 3){item.replace("{pf)", "checked");}
   else{item.replace("{pf)", "");}
@@ -552,53 +552,56 @@ void handleConKey() {
   item.replace("{i6)", "");
   Page += item;
 	
-	String item1 = FPSTR(HTTP_FIELDSET_PARAM);
-	item1.replace("{L)", "Azure IoT Central");
-	item1.replace("{i1)", HTTP_INPUT_PARAM);
-	item1.replace("{i_t)", "text");
-	item1.replace("{N)", "ConKey");
-	item1.replace("{id}", "ConKey");
-	item1.replace("{V)", ConKey);
-	item1.replace("{pf)", "size=30 autofocus");
-	item1.replace("{F)", "");
-  item1.replace("{i2)", "");
-  item1.replace("{i3)", "");
-  item1.replace("{i4)", "");
-  item1.replace("{i5)", "");
-  item1.replace("{i6)", "");
-	Page += item1;
+	item = FPSTR(HTTP_FIELDSET_PARAM);
+	item.replace("{L)", "Azure IoT Central Connection Key");
+	item.replace("{i1)", HTTP_INPUT_PARAM);
+  item.replace("{f_id)", "Azure");
+	item.replace("{i_t)", "text1");
+	item.replace("{N)", "ConKey");
+	item.replace("{id}", "AzureConKey");
+	item.replace("{V)", ConKey);
+	item.replace("{pf)", "size=30 autofocus");
+	item.replace("{F)", "");
+  item.replace("{i2)", "");
+  item.replace("{i3)", "");
+  item.replace("{i4)", "");
+  item.replace("{i5)", "");
+  item.replace("{i6)", "");
+	Page += item;
 
-  String item2 = FPSTR(HTTP_FIELDSET_PARAM);
-  item2.replace("{L)", "AWS");
-  item2.replace("{i1)", HTTP_INPUT_PARAM);
-  item2.replace("{i_t)", "text");
-  item2.replace("{N)", "ConKey");
-  item2.replace("{id}", "ConKey");
-  item2.replace("{V)", ConKey);
-  item2.replace("{pf)", "size=30 autofocus");
-  item2.replace("{F)", "");
-  item2.replace("{i2)", "");
-  item2.replace("{i3)", "");
-  item2.replace("{i4)", "");
-  item2.replace("{i5)", "");
-  item2.replace("{i6)", "");
-  Page += item2;
+  item = FPSTR(HTTP_FIELDSET_PARAM);
+  item.replace("{L)", "AWS Connection Key");
+  item.replace("{i1)", HTTP_INPUT_PARAM);
+  item.replace("{f_id)", "AWS");
+  item.replace("{i_t)", "text");
+  item.replace("{N)", "ConKey");
+  item.replace("{id}", "AWSConKey");
+  item.replace("{V)", ConKey);
+  item.replace("{pf)", "size=30 autofocus");
+  item.replace("{F)", "");
+  item.replace("{i2)", "");
+  item.replace("{i3)", "");
+  item.replace("{i4)", "");
+  item.replace("{i5)", "");
+  item.replace("{i6)", "");
+  Page += item;
 
-  String item3 = FPSTR(HTTP_FIELDSET_PARAM);
-  item3.replace("{L)", "GCP");
-  item3.replace("{i1)", HTTP_INPUT_PARAM);
-  item3.replace("{i_t)", "text");
-  item3.replace("{N)", "ConKey");
-  item3.replace("{id}", "ConKey");
-  item3.replace("{V)", ConKey);
-  item3.replace("{pf)", "size=30 autofocus");
-  item3.replace("{F)", "");
-  item3.replace("{i2)", "");
-  item3.replace("{i3)", "");
-  item3.replace("{i4)", "");
-  item3.replace("{i5)", "");
-  item3.replace("{i6)", "");
-  Page += item3;
+  item = FPSTR(HTTP_FIELDSET_PARAM);
+  item.replace("{L)", "GCP Connection Key");
+  item.replace("{i1)", HTTP_INPUT_PARAM);
+  item.replace("{f_id)", "GCP");
+  item.replace("{i_t)", "text");
+  item.replace("{N)", "ConKey");
+  item.replace("{id}", "GCPConKey");
+  item.replace("{V)", ConKey);
+  item.replace("{pf)", "size=30 autofocus");
+  item.replace("{F)", "");
+  item.replace("{i2)", "");
+  item.replace("{i3)", "");
+  item.replace("{i4)", "");
+  item.replace("{i5)", "");
+  item.replace("{i6)", "");
+  Page += item;
 
 
 	item = FPSTR(HTTP_FIELDSET_PARAM);
@@ -617,7 +620,9 @@ Page +=   F("<div class=\"modal\" id=\"myModal\" style=\"display: none;\"><div c
           "<button type=\"button\" class=\"btn btn-danger\" data-dismiss=\"modal\" id=\"closeBtn\">Confirm</button></div></div></div></div>"
   "<script src=\"https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js\"></script>"
            "<script>"
-             "var url_encode; var ConKey; $('#set_button').click(function(OnEvent){ OnEvent.preventDefault();"
+             "var url_encode; var ConKey;"
+             "$('input:radio[name=\"PlatformState\"]').change(function(){if($(this).is(':checked')&&$(this).val()=='1'){$('#Azure').show(); $('#AWS').hide(); $('#GCP').hide();}else if($(this).is(':checked')&&$(this).val()=='2'){$('#AWS').show(); $('#GCP').hide(); $('#Azure').hide();}else if($(this).is(':checked')&&$(this).val()=='3'){$('#GCP').show(); $('#AWS').hide(); $('#Azure').hide();}});"           
+             "$('#set_button').click(function(OnEvent){ OnEvent.preventDefault();"
              "ConKey = $('#ConKey').val();"
              "url_encode = encodeURIComponent(ConKey);"
              "$.get('/SetConKey?url_encode=' + url_encode, function(url_encode){ console.log(url_encode);});"
