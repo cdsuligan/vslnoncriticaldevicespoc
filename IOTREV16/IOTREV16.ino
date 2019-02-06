@@ -89,6 +89,273 @@ PubSubClient client(awsWSclient);
 //# of connections
 long connection = 0;
 
+void ICACHE_RAM_ATTR onTimerISR() {
+  WiFiCount++;
+  iotcount++;
+  ipcount++;
+  timer1_write(5000000);//1s
+}
+
+void setup() {
+  Serial.begin(115200);
+  EEPROM.begin(512);
+  EEPROM_readAnything(200, factory_settings_stored);
+
+  if (memcmp(&factory_settings_stored, "YES", 3) != 0) {
+    restore_factory_settings();
+  }
+  struct ESPPins PinSet;
+  EEPROM_readAnything(128, PinSet);
+  SetPins(PinSet);
+
+  /////WiFi
+  WiFiManager wifiManager;
+  wifiManager.setConfigPortalTimeout(180);
+  wifiManager.autoConnect("AutoConnectAP", "administrator");
+  start_server();
+
+  Serial.println (F("HTTP server started"));
+  EEPROM_readAnything(205, platformMemory);
+  Serial.println (platformMemory);
+  initTime();
+
+  //////Different Platforms
+  if (platformMemory == 1) { // When the user has chosen Azure IoT Central
+    Serial.println ("User has chosen Azure IoT Central");
+    EEPROM_readAnything(256, IOT_CONFIG_CONNECTION_STRING);
+    iotHubClientHandle = IoTHubClient_LL_CreateFromConnectionString(IOT_CONFIG_CONNECTION_STRING, MQTT_Protocol);
+    if (iotHubClientHandle == NULL) {
+      Serial.println(F("Failed on IoTHubClient_CreateFromConnectionString"));
+      ConKey = false;
+    } else {
+      ConKey = true;
+    }
+
+  } else if (platformMemory == 2) { //////////////////// When the user has chosen AWS
+    Serial.println ("User has chosen AWS");
+    //fill AWS parameters
+    awsWSclient.setAWSRegion(aws_region);
+    awsWSclient.setAWSDomain(aws_endpoint);
+    awsWSclient.setAWSKeyID(aws_key);
+    awsWSclient.setAWSSecretKey(aws_secret);
+    awsWSclient.setUseSSL(true);
+    ///
+    if (connect()) {
+        subscribe();
+      } else {
+      Serial.println("Cannot connect to MQTT")
+      }
+
+  } else if (platformMemory == 3) { ///////////////When the user has chosen GCP
+    Serial.println ("User has chosen GCP");
+    EEPROM_readAnything(256, IOT_CONFIG_CONNECTION_STRING);
+    iotHubClientHandle = IoTHubClient_LL_CreateFromConnectionString(IOT_CONFIG_CONNECTION_STRING, MQTT_Protocol);
+    if (iotHubClientHandle == NULL) {
+      Serial.println(F("Failed on IoTHubClient_CreateFromConnectionString"));
+      ConKey = false;
+    }
+    else {
+      ConKey = true;
+    }
+  }
+
+  //read all settings from EEPROM
+  EEPROM_readAnything(0, PinReporting);
+  EEPROM_readAnything(150, DweetData);
+
+  //DweetIP(); /////////////////re-introduce after prototyping finished //////////////
+
+  pinMode(D0, INPUT_PULLUP);
+  pinMode(D1, INPUT_PULLUP);
+  pinMode(D2, INPUT_PULLUP);
+  //pinMode(A0,INPUT);//not sure if this is required
+
+  timer1_attachInterrupt(onTimerISR);
+  timer1_enable(TIM_DIV16, TIM_EDGE, TIM_SINGLE);
+  timer1_write(5000000); //1s
+}
+
+
+void loop() {
+  handle_client();
+
+  if (iotcount >= PinReporting.frequency ) {
+    if (platformMemory == 1 ) { /////When user has chosen Azure IoT
+      if (PinStatusChange() && ConKey ) { ///Only sends data when PinStatusChange
+        Serial.println ("Pin status changed. Sending new status");
+        char messagePayload[MESSAGE_MAX_LEN];
+        readMessage(messageCount, messagePayload);
+        sendMessage(iotHubClientHandle, messagePayload);
+        IoTHubFullSendReceive();
+        messageCount++;
+      }
+      ////////////Sends AC value
+      Serial.println ("Sending AC value");
+      char payloadAC[MESSAGE_MAX_LEN];
+      readMessageAC(messageCount, payloadAC);
+      sendMessage(iotHubClientHandle, payloadAC);
+      IoTHubFullSendReceive();
+      messageCount++;
+      /////////////////////
+    } else if (platformMemory == 2 ) { /////When user has chosen AWS
+      Serial.println ("Sending data to AWS");
+      if (connect()) {
+        sendAWSMessage();
+      } else {
+      Serial.println("Cannot connect to MQTT")
+      }
+
+    } else if (platformMemory == 3 ) {
+      if (PinStatusChange() && ConKey ) { /////When user has chosen GCP
+        Serial.println ("Sending data to GCP");
+        
+      }
+    }
+
+    iotcount = 0;
+  }
+
+  if (ipcount >= 600)
+  {
+    if (DweetData)
+    {
+      char PubIP [100];
+      if (getIp(PubIP))
+      {
+        char mac [20];
+        char locIP [10];
+        uint8_t temp [6];
+        WiFi.macAddress(temp);
+        sprintf(mac, "%02X:%02X:%02X:%02X:%02X:%02X", temp[0], temp[1], temp[2], temp[3], temp[4], temp[5]);
+        sprintf(locIP, "%d.%d.%d.%d", WiFi.localIP()[0], WiFi.localIP()[1], WiFi.localIP()[2], WiFi.localIP()[3]);
+        dweet(PubIP, mac, locIP);
+      }
+    }
+    ipcount = 0;
+  }
+
+  if (WiFiCount >= 5)
+  {
+    if (WiFi.status() != WL_CONNECTED)
+    {
+      //////////////////////////try to reconnect rather than resetting////////////////////
+      ESP.restart();
+    }
+    WiFiCount = 0;
+  }
+}
+
+void IoTHubFullSendReceive() {
+  IOTHUB_CLIENT_STATUS Status;
+  static unsigned int watchdog;
+  while ((IoTHubClient_LL_GetSendStatus(iotHubClientHandle, &Status) == IOTHUB_CLIENT_OK) && (Status == IOTHUB_CLIENT_SEND_STATUS_BUSY))
+  {
+    IoTHubClient_LL_DoWork(iotHubClientHandle);
+    ThreadAPI_Sleep(100);
+    watchdog++;
+    yield(); ////////////////////////////////////////////////need to deal with this better. possibly leave routine and return later///////////////////////////////////////
+    if (watchdog > 100)
+    {
+      watchdog = 0;
+      Serial.println (F("Communication with iotHub Failed!"));
+      ESP.restart();
+    }
+  }
+}
+
+
+void initTime() {
+
+  static unsigned int watchdog;
+
+  time_t epochTime;
+
+  configTime(0, 0, "pool.ntp.org", "time.nist.gov");
+
+  while (true) {
+    epochTime = time(NULL);
+
+    if (epochTime == 0) {
+      Serial.println(F("Fetching NTP epoch time failed! Waiting to retry"));
+      delay(1000);
+      watchdog++;
+    } else {
+      Serial.print(F("Fetched NTP epoch time is: "));
+      Serial.println(epochTime);
+      break;
+    }
+    if (watchdog >= 20)
+    {
+      //ESP.restart();
+      break;
+    }
+  }
+}
+
+void readMessage(unsigned int messageId, char *payload) {
+  StaticJsonBuffer<MESSAGE_MAX_LEN> jsonBuffer;
+  JsonObject &object = jsonBuffer.createObject();
+  object[PinReporting.messageID] = messageId;
+  if (PinReporting.D0State) {
+    object[PinReporting.D0Name] = String(LastPinStatus.D0Status);
+  }
+  if (PinReporting.D1State) {
+    object[PinReporting.D1Name] = String(LastPinStatus.D1Status);
+  }
+  if (PinReporting.D2State) {
+    object[PinReporting.D2Name] = String(LastPinStatus.D2Status);
+  }
+  if (PinReporting.A0State) {
+    object[PinReporting.A0Name] = String(LastPinStatus.A0Status);
+  }
+
+  object.printTo(payload, MESSAGE_MAX_LEN); //inserting data
+}
+
+void readMessageAC(unsigned int messageId, char *payload) {
+  StaticJsonBuffer<MESSAGE_MAX_LEN> jsonBuffer;
+  JsonObject &object = jsonBuffer.createObject();
+  object[PinReporting.messageID] = messageId;
+
+  Serial.print("AC: ");
+  double A0Value = calcIrms() * PinReporting.A0Scale;
+  Serial.println(A0Value);
+  object["AC"] = A0Value;
+
+  object.printTo(payload, MESSAGE_MAX_LEN); //inserting data
+}
+
+
+
+static void sendMessage(IOTHUB_CLIENT_LL_HANDLE iotHubClientHandle, char *buffer) {
+  IOTHUB_MESSAGE_HANDLE messageHandle = IoTHubMessage_CreateFromByteArray((const unsigned char *)buffer, strlen(buffer));
+  if (messageHandle == NULL) {
+    Serial.println(F("Unable to create a new IoTHubMessage."));
+  } else {
+    Serial.printf("Sending message: %s.\r\n", buffer);
+    if (IoTHubClient_LL_SendEventAsync(iotHubClientHandle, messageHandle, sendCallback, NULL) != IOTHUB_CLIENT_OK)
+    {
+      Serial.println(F("Failed to hand message to IoTHubClient"));
+    }
+    else
+    {
+      Serial.println(F("IoTHubClient available for delivery"));
+    }
+    IoTHubMessage_Destroy(messageHandle);
+  }
+}
+
+static void sendCallback(IOTHUB_CLIENT_CONFIRMATION_RESULT result, void *userContextCallback) {
+  if (IOTHUB_CLIENT_CONFIRMATION_OK == result)
+  {
+    Serial.println(F("Message sent to IoT Hub"));
+  }
+  else
+  {
+    Serial.println(F("Failed message to IoT Hub"));
+  }
+}
+
 //generate random mqtt clientID
 char* generateClientID () {
   char* cID = new char[23]();
@@ -148,311 +415,46 @@ void subscribe () {
 //send a message to a mqtt topic
 void sendAWSMessage() {
 
-  char* cTemp = "90";
-  char* cHumid = "55";
+  //char* cTemp = "90";
+  //char* cHumid = "55";
   char shadow[256];
   double A0Value = calcIrms() * PinReporting.A0Scale;
-  String asd = String(A0Value);
+  String aZeroValue = String(A0Value);
   char aa[256];
-  asd.toCharArray(aa,256);
-  strcpy(shadow, "{\"state\":{\"reported\": {\"Humidity\":");
-  strcat(shadow, cHumid);
+  aZeroValue.toCharArray(aa, 256);
+  char dZero[256];
+  char dOne[256];
+  char dTwo[256];
+  char aZero[256];
+
+  if (PinReporting.D0State) {
+    String(LastPinStatus.D0Status).toCharArray(dZero, 256);
+  }
+  if (PinReporting.D1State) {
+    String(LastPinStatus.D1Status).toCharArray(dOne, 256);
+  }
+  if (PinReporting.D2State) {
+    String(LastPinStatus.D2Status).toCharArray(dTwo, 256) ;
+  }
+  if (PinReporting.A0State) {
+    String(LastPinStatus.A0Status).toCharArray(aZero, 256) ;
+  }
+
+  strcpy(shadow, "{\"state\":{\"reported\": {\"D0Status\":");
+  strcat(shadow, dZero);
+  strcat(shadow, ", \"D1Status\":");
+  strcat(shadow, dOne);
+  strcat(shadow, ", \"D2Status\":");
+  strcat(shadow, dTwo);
+  strcat(shadow, ", \"A0Status\":");
+  strcat(shadow, aZero);
   strcat(shadow, ", \"AC\":");
   strcat(shadow, aa);
-  strcat(shadow, ", \"Temperature\":");
-  strcat(shadow, cTemp);
   strcat(shadow, "}}}");
 
   int rc = client.publish(aws_topic, shadow);
   Serial.println(shadow);
   delay (6000);
-}
-
-void ICACHE_RAM_ATTR onTimerISR() {
-  WiFiCount++;
-  iotcount++;
-  ipcount++;
-  timer1_write(5000000);//1s
-}
-
-void setup() {
-  Serial.begin(115200);
-  EEPROM.begin(512);
-  EEPROM_readAnything(200, factory_settings_stored);
-
-  if (memcmp(&factory_settings_stored, "YES", 3) != 0) {
-    restore_factory_settings();
-  }
-  struct ESPPins PinSet;
-  EEPROM_readAnything(128, PinSet);
-  SetPins(PinSet);
-
-  /////WiFi
-  //WiFiManager
-  WiFiManager wifiManager;
-  //reset saved settings
-  //wifiManager.resetSettings();
-  wifiManager.setConfigPortalTimeout(180);
-  // wifiManager.setSTAStaticIPConfig(IPAddress(192,168,1,240), IPAddress(192,168,1,1), IPAddress(0,0,0,0));
-  wifiManager.autoConnect("AutoConnectAP", "administrator");
-  start_server();
-
-  Serial.println (F("HTTP server started"));
-  EEPROM_readAnything(205, platformMemory);
-  Serial.println (platformMemory);
-  initTime();
-
-  //////Different Platforms
-  if (platformMemory == 1) { // When the user has chosen Azure IoT Central
-    Serial.println ("User has chosen Azure IoT Central");
-    EEPROM_readAnything(256, IOT_CONFIG_CONNECTION_STRING);
-    iotHubClientHandle = IoTHubClient_LL_CreateFromConnectionString(IOT_CONFIG_CONNECTION_STRING, MQTT_Protocol);
-    if (iotHubClientHandle == NULL)
-    {
-      Serial.println(F("Failed on IoTHubClient_CreateFromConnectionString"));
-      ConKey = false;
-    }
-    else {
-      ConKey = true;
-    }
-    //////////////////// When the user has chosen AWS
-  } else if (platformMemory == 2) {
-    Serial.println ("User has chosen AWS");
-    //fill AWS parameters
-    awsWSclient.setAWSRegion(aws_region);
-    awsWSclient.setAWSDomain(aws_endpoint);
-    awsWSclient.setAWSKeyID(aws_key);
-    awsWSclient.setAWSSecretKey(aws_secret);
-    awsWSclient.setUseSSL(true);
-
-
-    ///////////////When the user has chosen GCP
-  } else if (platformMemory == 3) {
-    Serial.println ("User has chosen GCP");
-    EEPROM_readAnything(256, IOT_CONFIG_CONNECTION_STRING);
-    iotHubClientHandle = IoTHubClient_LL_CreateFromConnectionString(IOT_CONFIG_CONNECTION_STRING, MQTT_Protocol);
-    if (iotHubClientHandle == NULL)
-    {
-      Serial.println(F("Failed on IoTHubClient_CreateFromConnectionString"));
-      ConKey = false;
-    }
-    else {
-      ConKey = true;
-    }
-  }
-
-
-  //read all settings from EEPROM
-  EEPROM_readAnything(0, PinReporting);
-  EEPROM_readAnything(150, DweetData);
-
-  //DweetIP(); /////////////////re-introduce after prototyping finished //////////////
-
-  pinMode(D0, INPUT_PULLUP);
-  pinMode(D1, INPUT_PULLUP);
-  pinMode(D2, INPUT_PULLUP);
-  //pinMode(A0,INPUT);//not sure if this is required
-
-
-
-  timer1_attachInterrupt(onTimerISR);
-  timer1_enable(TIM_DIV16, TIM_EDGE, TIM_SINGLE);
-  timer1_write(5000000); //1s
-}
-
-
-void loop() {
-
-  handle_client();
-
-  if (iotcount >= PinReporting.frequency ) {
-    if (platformMemory == 1 ) {
-      if (PinStatusChange() && ConKey ) { ///Only sends data when PinStatusChange
-        Serial.println ("11111111111111111111111111111");
-        char messagePayload[MESSAGE_MAX_LEN];
-        readMessage(messageCount, messagePayload);
-        sendMessage(iotHubClientHandle, messagePayload);
-        IoTHubFullSendReceive();
-        messageCount++;
-      }
-
-      ////////////Sends AC value
-      Serial.println ("This will send AC value");
-      char payloadAC[MESSAGE_MAX_LEN];
-      readMessageAC(messageCount, payloadAC);
-      sendMessage(iotHubClientHandle, payloadAC);
-      IoTHubFullSendReceive();
-      messageCount++;
-      /////////////////////
-    } else if (platformMemory == 2 ) {
-        Serial.println ("2222222222222222222222222222222222222222222222222222222222");
-        if (connect()) {
-          subscribe();
-          sendAWSMessage();
-                       }
-      
-    } else if (platformMemory == 3 ) {
-      if (PinStatusChange() && ConKey ) {
-        Serial.println ("3333333333333333333333333333");
-        char messagePayload[MESSAGE_MAX_LEN];
-        readMessage(messageCount, messagePayload);
-        sendMessage(iotHubClientHandle, messagePayload);
-        IoTHubFullSendReceive();
-        messageCount++;
-      }
-    }
-
-    iotcount = 0;
-  }
-
-  if (ipcount >= 600)
-  {
-    if (DweetData)
-    {
-      char PubIP [100];
-      if (getIp(PubIP))
-      {
-        char mac [20];
-        char locIP [10];
-        uint8_t temp [6];
-        WiFi.macAddress(temp);
-        sprintf(mac, "%02X:%02X:%02X:%02X:%02X:%02X", temp[0], temp[1], temp[2], temp[3], temp[4], temp[5]);
-        sprintf(locIP, "%d.%d.%d.%d", WiFi.localIP()[0], WiFi.localIP()[1], WiFi.localIP()[2], WiFi.localIP()[3]);
-        dweet(PubIP, mac, locIP);
-      }
-    }
-    ipcount = 0;
-  }
-
-  if (WiFiCount >= 5)
-  {
-    if (WiFi.status() != WL_CONNECTED)
-    {
-      //////////////////////////try to reconnect rather than resetting////////////////////
-      ESP.restart();
-    }
-    WiFiCount = 0;
-  }
-}
-
-void IoTHubFullSendReceive()
-{
-  IOTHUB_CLIENT_STATUS Status;
-  static unsigned int watchdog;
-  while ((IoTHubClient_LL_GetSendStatus(iotHubClientHandle, &Status) == IOTHUB_CLIENT_OK) && (Status == IOTHUB_CLIENT_SEND_STATUS_BUSY))
-  {
-    IoTHubClient_LL_DoWork(iotHubClientHandle);
-    ThreadAPI_Sleep(100);
-    watchdog++;
-    yield(); ////////////////////////////////////////////////need to deal with this better. possibly leave routine and return later///////////////////////////////////////
-    if (watchdog > 100)
-    {
-      watchdog = 0;
-      Serial.println (F("Communication with iotHub Failed!"));
-      ESP.restart();
-    }
-  }
-}
-
-
-void initTime() {
-
-  static unsigned int watchdog;
-
-  time_t epochTime;
-
-  configTime(0, 0, "pool.ntp.org", "time.nist.gov");
-
-  while (true) {
-    epochTime = time(NULL);
-
-    if (epochTime == 0) {
-      Serial.println(F("Fetching NTP epoch time failed! Waiting to retry"));
-      delay(1000);
-      watchdog++;
-    } else {
-      Serial.print(F("Fetched NTP epoch time is: "));
-      Serial.println(epochTime);
-      break;
-    }
-    if (watchdog >= 20)
-    {
-      //ESP.restart();
-      break;
-    }
-  }
-}
-
-void readMessage(unsigned int messageId, char *payload)
-{
-  StaticJsonBuffer<MESSAGE_MAX_LEN> jsonBuffer;
-  JsonObject &object = jsonBuffer.createObject();
-  object[PinReporting.messageID] = messageId;
-  if (PinReporting.D0State) {
-    object[PinReporting.D0Name] = String(LastPinStatus.D0Status);
-  }
-  if (PinReporting.D1State) {
-    object[PinReporting.D1Name] = String(LastPinStatus.D1Status);
-  }
-  if (PinReporting.D2State) {
-    object[PinReporting.D2Name] = String(LastPinStatus.D2Status);
-  }
-  if (PinReporting.A0State) {
-    object[PinReporting.A0Name] = String(LastPinStatus.A0Status);
-  }
-
-  object.printTo(payload, MESSAGE_MAX_LEN); //inserting data
-}
-
-void readMessageAC(unsigned int messageId, char *payload)
-{
-  StaticJsonBuffer<MESSAGE_MAX_LEN> jsonBuffer;
-  JsonObject &object = jsonBuffer.createObject();
-  object[PinReporting.messageID] = messageId;
-
-  Serial.print("AC: ");
-  double A0Value = calcIrms() * PinReporting.A0Scale;
-  Serial.println(A0Value);
-  object["AC"] = A0Value;
-
-  object.printTo(payload, MESSAGE_MAX_LEN); //inserting data
-}
-
-
-
-static void sendMessage(IOTHUB_CLIENT_LL_HANDLE iotHubClientHandle, char *buffer)
-{
-  IOTHUB_MESSAGE_HANDLE messageHandle = IoTHubMessage_CreateFromByteArray((const unsigned char *)buffer, strlen(buffer));
-  if (messageHandle == NULL)
-  {
-    Serial.println(F("Unable to create a new IoTHubMessage."));
-  }
-  else
-  {
-    Serial.printf("Sending message: %s.\r\n", buffer);
-    if (IoTHubClient_LL_SendEventAsync(iotHubClientHandle, messageHandle, sendCallback, NULL) != IOTHUB_CLIENT_OK)
-    {
-      Serial.println(F("Failed to hand message to IoTHubClient"));
-    }
-    else
-    {
-      Serial.println(F("IoTHubClient available for delivery"));
-    }
-    IoTHubMessage_Destroy(messageHandle);
-  }
-}
-
-static void sendCallback(IOTHUB_CLIENT_CONFIRMATION_RESULT result, void *userContextCallback)
-{
-  if (IOTHUB_CLIENT_CONFIRMATION_OK == result)
-  {
-    Serial.println(F("Message sent to IoT Hub"));
-  }
-  else
-  {
-    Serial.println(F("Failed message to IoT Hub"));
-  }
-
 }
 
 char PinStatusChange() {
@@ -482,12 +484,9 @@ char PinStatusChange() {
     Serial.print("AC: ");
     double A0Value = calcIrms() * PinReporting.A0Scale;
     Serial.println(A0Value);
-    if (A0Value > PinReporting.A0Threshold)
-    {
+    if (A0Value > PinReporting.A0Threshold) {
       ThisPinStatus.A0Status = true;
-    }
-    else
-    {
+    } else {
       ThisPinStatus.A0Status = false;
     }
   }
@@ -495,25 +494,17 @@ char PinStatusChange() {
     Serial.print("DC: ");
     double A0Value = analogRead(A0) * PinReporting.A0Scale;
     Serial.println(A0Value);
-    if (A0Value > PinReporting.A0Threshold)
-    {
+    if (A0Value > PinReporting.A0Threshold) {
       ThisPinStatus.A0Status = true;
-    }
-    else
-    {
+    } else {
       ThisPinStatus.A0Status = false;
     }
-  }
-  else {
+  } else {
     ThisPinStatus.A0Status = false;
   }
-
-  if (memcmp(&ThisPinStatus, &LastPinStatus, sizeof(ThisPinStatus)) == 0)
-  {
+  if (memcmp(&ThisPinStatus, &LastPinStatus, sizeof(ThisPinStatus)) == 0) {
     return (0);
-  }
-  else
-  {
+  } else {
     memset(&LastPinStatus, 0, sizeof LastPinStatus);
     LastPinStatus = ThisPinStatus;
     return (1);
