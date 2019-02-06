@@ -54,7 +54,7 @@ struct PinStatus {
   bool A0Status;
 };
 
-#define MESSAGE_MAX_LEN 128
+#define MESSAGE_MAX_LEN 256
 
 ///////////*GLOBAL VARIABLES*//////////
 char IOT_CONFIG_CONNECTION_STRING[200];
@@ -143,7 +143,7 @@ void setup() {
     if (connect()) {
         subscribe();
       } else {
-      Serial.println("Cannot connect to MQTT")
+      Serial.println("Cannot connect to MQTT");
       }
 
   } else if (platformMemory == 3) { ///////////////When the user has chosen GCP
@@ -202,7 +202,7 @@ void loop() {
       if (connect()) {
         sendAWSMessage();
       } else {
-      Serial.println("Cannot connect to MQTT")
+      Serial.println("Cannot connect to MQTT");
       }
 
     } else if (platformMemory == 3 ) {
