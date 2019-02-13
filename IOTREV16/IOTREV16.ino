@@ -71,9 +71,9 @@ static unsigned int WiFiCount = 0;
 static IOTHUB_CLIENT_LL_HANDLE iotHubClientHandle;
 
 //////AWS credentials
-char aws_endpoint[]    = "a3pidz6hu6hupb-ats.iot.ap-southeast-2.amazonaws.com";
-char aws_key[]         = "AKIAJS5X2IKLMZWMPZSQ";
-char aws_secret[]      = "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";
+char aws_endpoint[];
+char aws_key[];
+char aws_secret[];
 char aws_region[]      = "ap-southeast-2";
 const char* aws_topic  = "$aws/things/IoTTestArduino/shadow/update";
 int port = 443;
@@ -99,7 +99,7 @@ void ICACHE_RAM_ATTR onTimerISR() {
 void setup() {
   Serial.begin(115200);
   EEPROM.begin(512);
-  EEPROM_readAnything(200, factory_settings_stored);
+  EEPROM_readAnything(155, factory_settings_stored);
 
   if (memcmp(&factory_settings_stored, "YES", 3) != 0) {
     restore_factory_settings();
@@ -108,6 +108,7 @@ void setup() {
   EEPROM_readAnything(128, PinSet);
   SetPins(PinSet);
 
+
   /////WiFi
   WiFiManager wifiManager;
   wifiManager.setConfigPortalTimeout(180);
@@ -115,14 +116,14 @@ void setup() {
   start_server();
 
   Serial.println (F("HTTP server started"));
-  EEPROM_readAnything(205, platformMemory);
+  EEPROM_readAnything(160, platformMemory);
   Serial.println (platformMemory);
   initTime();
 
   //////Different Platforms
   if (platformMemory == 1) { // When the user has chosen Azure IoT Central
     Serial.println ("User has chosen Azure IoT Central");
-    EEPROM_readAnything(256, IOT_CONFIG_CONNECTION_STRING);
+    EEPROM_readAnything(163, IOT_CONFIG_CONNECTION_STRING);
     iotHubClientHandle = IoTHubClient_LL_CreateFromConnectionString(IOT_CONFIG_CONNECTION_STRING, MQTT_Protocol);
     if (iotHubClientHandle == NULL) {
       Serial.println(F("Failed on IoTHubClient_CreateFromConnectionString"));
@@ -133,6 +134,9 @@ void setup() {
 
   } else if (platformMemory == 2) { //////////////////// When the user has chosen AWS
     Serial.println ("User has chosen AWS");
+    EEPROM_readAnything(353, aws_endpoint);// will be approx 55 char 
+    EEPROM_readAnything(408, aws_key); // will be approx 25 char
+    EEPROM_readAnything(433, aws_secret); // will be approx 45 char
     //fill AWS parameters
     awsWSclient.setAWSRegion(aws_region);
     awsWSclient.setAWSDomain(aws_endpoint);
@@ -148,15 +152,8 @@ void setup() {
 
   } else if (platformMemory == 3) { ///////////////When the user has chosen GCP
     Serial.println ("User has chosen GCP");
-    EEPROM_readAnything(256, IOT_CONFIG_CONNECTION_STRING);
-    iotHubClientHandle = IoTHubClient_LL_CreateFromConnectionString(IOT_CONFIG_CONNECTION_STRING, MQTT_Protocol);
-    if (iotHubClientHandle == NULL) {
-      Serial.println(F("Failed on IoTHubClient_CreateFromConnectionString"));
-      ConKey = false;
-    }
-    else {
-      ConKey = true;
-    }
+    EEPROM_readAnything(478, gcp_regId); // must be less then 15 char
+    EEPROM_readAnything(495, gcp_devId); // must be less then 15 char
   }
 
   //read all settings from EEPROM

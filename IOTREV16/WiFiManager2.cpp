@@ -434,7 +434,7 @@ void WiFiManager::handleRoot() {
   page += FPSTR(HTTP_END);
 
   server->sendHeader("Content-Length", String(page.length()));
-  server->send(200, "text/html", page);
+  server->send(155, "text/html", page);
 
 }
 
@@ -588,7 +588,7 @@ void WiFiManager::handleWifi(boolean scan) {
   page += FPSTR(HTTP_END);
 
   server->sendHeader("Content-Length", String(page.length()));
-  server->send(200, "text/html", page);
+  server->send(155, "text/html", page);
 
 
   DEBUG_WM(F("Sent config page"));
@@ -649,7 +649,7 @@ void WiFiManager::handleWifiSave() {
   page += FPSTR(HTTP_END);
 
   server->sendHeader("Content-Length", String(page.length()));
-  server->send(200, "text/html", page);
+  server->send(155, "text/html", page);
 
   DEBUG_WM(F("Sent wifi save page"));
 
@@ -692,7 +692,7 @@ void WiFiManager::handleInfo() {
   page += FPSTR(HTTP_END);
 
   server->sendHeader("Content-Length", String(page.length()));
-  server->send(200, "text/html", page);
+  server->send(155, "text/html", page);
 
   DEBUG_WM(F("Sent info page"));
 }
@@ -711,7 +711,7 @@ void WiFiManager::handleReset() {
   page += FPSTR(HTTP_END);
 
   server->sendHeader("Content-Length", String(page.length()));
-  server->send(200, "text/html", page);
+  server->send(155, "text/html", page);
 
   DEBUG_WM(F("Sent reset page"));
   delay(5000);
