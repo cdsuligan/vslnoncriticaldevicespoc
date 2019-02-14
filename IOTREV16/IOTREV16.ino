@@ -23,6 +23,7 @@
 #include <Stream.h>
 #include <ESP8266WiFiMulti.h>
 #include "AmazonIOTClient.h"
+#include "esp8266_mqtt.h"
 
 //AWS
 #include "sha256.h"
@@ -99,8 +100,10 @@ void ICACHE_RAM_ATTR onTimerISR() {
 void setup() {
   Serial.begin(115200);
   EEPROM.begin(512);
+  
+  setupCloudIoT(); // Creates globals for MQTT
   EEPROM_readAnything(155, factory_settings_stored);
-
+  startMQTT();
   if (memcmp(&factory_settings_stored, "YES", 3) != 0) {
     restore_factory_settings();
   }
@@ -154,6 +157,21 @@ void setup() {
     Serial.println ("User has chosen GCP");
     EEPROM_readAnything(478, gcp_regId); // must be less then 15 char
     EEPROM_readAnything(495, gcp_devId); // must be less then 15 char
+    mqttClient->loop();
+    delay(10);  // <- fixes some issues with WiFi stability
+
+    if (!mqttClient->connected()) {
+    connect();
+  }
+
+
+  // publish a message roughly every second.
+  if (millis() - lastMillis > 1000) {
+    lastMillis = millis();
+    Serial.println("Every Seconds");
+    publishTelemetry("80");
+  }
+    
   }
 
   //read all settings from EEPROM
