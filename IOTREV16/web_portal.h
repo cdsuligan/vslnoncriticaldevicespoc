@@ -48,9 +48,19 @@ void handleSet();
 void handleSaveReport();
 
 void handleConKey();
+//////////////////////////////////
+void handleSaveAwsEndKey();
+
+void handleSaveAwsConKey();
+
+void handleSaveAwsSecKey();
+
+void handleSaveGcpDev();
+
+void handleSaveGcpReg();
 
 void handleSaveConKey();
-
+//////////////////////////////////
 void handleSaveResponse();
 
 void savePlatformState();

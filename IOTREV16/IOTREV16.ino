@@ -22,8 +22,7 @@
 #include <Arduino.h>
 #include <Stream.h>
 #include <ESP8266WiFiMulti.h>
-#include "AmazonIOTClient.h"
-#include "esp8266_mqtt.h"
+#include <AmazonIOTClient.h>
 
 //AWS
 #include "sha256.h"
@@ -31,7 +30,7 @@
 
 //WEBSockets
 #include <Hash.h>
-#include "WebSocketsClient.h"
+#include <WebSocketsClient.h>
 
 //MQTT PUBSUBCLIENT LIB
 #include <PubSubClient.h>
@@ -58,7 +57,7 @@ struct PinStatus {
 #define MESSAGE_MAX_LEN 256
 
 ///////////*GLOBAL VARIABLES*//////////
-char IOT_CONFIG_CONNECTION_STRING[200];
+char IOT_CONFIG_CONNECTION_STRING[190];
 static struct Reporting PinReporting;
 static bool DweetData;
 static struct PinStatus LastPinStatus = {true}; //initialise to true to send out startup state
@@ -72,12 +71,16 @@ static unsigned int WiFiCount = 0;
 static IOTHUB_CLIENT_LL_HANDLE iotHubClientHandle;
 
 //////AWS credentials
-char aws_endpoint[];
-char aws_key[];
-char aws_secret[];
-char aws_region[]      = "ap-southeast-2";
-const char* aws_topic  = "$aws/things/IoTTestArduino/shadow/update";
+char aws_endpoint[55];
+char aws_key[25];
+char aws_secret[45];
+const char* aws_region = "ap-southeast-2";
+const char* aws_topic = "$aws/things/IoTTestArduino/shadow/update";
 int port = 443;
+
+//////GCP credentials
+char gcp_regId[15];
+char gcp_devId[15];
 
 ///////MQTT config
 const int maxMQTTpackageSize = 512;
@@ -100,15 +103,13 @@ void ICACHE_RAM_ATTR onTimerISR() {
 void setup() {
   Serial.begin(115200);
   EEPROM.begin(512);
-  
-  setupCloudIoT(); // Creates globals for MQTT
-  EEPROM_readAnything(155, factory_settings_stored);
-  startMQTT();
+  EEPROM_readAnything(135, factory_settings_stored);
+
   if (memcmp(&factory_settings_stored, "YES", 3) != 0) {
     restore_factory_settings();
   }
   struct ESPPins PinSet;
-  EEPROM_readAnything(128, PinSet);
+  EEPROM_readAnything(108, PinSet);
   SetPins(PinSet);
 
 
@@ -119,7 +120,7 @@ void setup() {
   start_server();
 
   Serial.println (F("HTTP server started"));
-  EEPROM_readAnything(160, platformMemory);
+  EEPROM_readAnything(140, platformMemory);
   Serial.println (platformMemory);
   initTime();
 
@@ -157,26 +158,12 @@ void setup() {
     Serial.println ("User has chosen GCP");
     EEPROM_readAnything(478, gcp_regId); // must be less then 15 char
     EEPROM_readAnything(495, gcp_devId); // must be less then 15 char
-    mqttClient->loop();
-    delay(10);  // <- fixes some issues with WiFi stability
-
-    if (!mqttClient->connected()) {
-    connect();
-  }
-
-
-  // publish a message roughly every second.
-  if (millis() - lastMillis > 1000) {
-    lastMillis = millis();
-    Serial.println("Every Seconds");
-    publishTelemetry("80");
-  }
-    
   }
 
   //read all settings from EEPROM
   EEPROM_readAnything(0, PinReporting);
-  EEPROM_readAnything(150, DweetData);
+  EEPROM_readAnything(130, DweetData);
+
 
   //DweetIP(); /////////////////re-introduce after prototyping finished //////////////
 

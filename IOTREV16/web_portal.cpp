@@ -43,6 +43,13 @@ void start_server(){
     server.on ("/FactorySettings", FactorySettings); 
     server.on ("/Settings", handleSettings);
     server.on ("/ConKey", handleConKey);
+    server.on ("/SetAwsKey", handleSaveAwsEndKey);
+    
+    server.on ("/SetAwsCon", handleSaveAwsConKey);
+    server.on ("/SetAwsSec", handleSaveAwsSecKey);
+    server.on ("/SetGcpDev", handleSaveGcpDev);
+    server.on ("/SetGcpReg", handleSaveGcpReg);
+    
     server.on ("/SetConKey", handleSaveConKey);    
     server.on ("/SetDweet", handleSaveDweet);
     server.on ("/SetPlatform", savePlatformState);
@@ -166,7 +173,7 @@ void FactorySettings() {
     if (!server.authenticate(www_username, www_password)) {
     return server.requestAuthentication();
     }
-    EEPROM_writeAnything(200, "NO");
+    EEPROM_writeAnything(135, "NO");
     ESP.restart();
 }
 
@@ -179,13 +186,111 @@ void handleSaveConKey() {
    return server.requestAuthentication();
    }
    String s = server.arg("url_encode");
-   char ConKey[200];
+   String d = server.arg("url_encode1");
+   /*String f = server.arg("url_encode2");
+   String g = server.arg("url_encode3");
+   String h = server.arg("url_encode4");
+   String j = server.arg("url_encode5");
+   */
+   char ConKey[190];
+   
+   //char AWSEnd[55];
+   /*char AWSConKey[25];
+   char AWSSecKey[45];
+
+   char GCPDevice[15];
+   char GCPRegistry[15];
+*/
+   
    strcpy(ConKey, s.c_str());
-   ConKey[s.length()] = '\0'; //add the null terminator at the end of the string
-   EEPROM_writeAnything(256, ConKey);   
+   //strcpy(AWSEnd, d.c_str());
+  /* strcpy(AWSConKey, f.c_str());
+   strcpy(AWSSecKey, g.c_str());
+   strcpy(GCPDevice, h.c_str());
+   strcpy(GCPRegistry, j.c_str());
+   */
+   ConKey[s.length()] = '\0';
+   //AWSEnd[d.length()] = '\0';
+   /*AWSConKey[f.length()] = '\0';
+   AWSSecKey[g.length()] = '\0';
+   GCPDevice[h.length()] = '\0';
+   GCPRegistry[j.length()] = '\0';   //add the null terminator at the end of the string
+   */
+   EEPROM_writeAnything(163, ConKey);
+   //EEPROM_writeAnything(353, AWSEnd);
+   /*EEPROM_writeAnything(408, AWSConKey);
+   EEPROM_writeAnything(433, AWSSecKey);
+   EEPROM_writeAnything(495, GCPDevice);
+   EEPROM_writeAnything(478, GCPRegistry);
+     */ 
 }
 
 
+////////////////////////////////////////////////////////////
+void handleSaveAwsEndKey(){
+  if (!server.authenticate(www_username, www_password)) {
+   return server.requestAuthentication();
+  }
+  String d = server.arg("url_encode1");
+  char AWSEnd[55];
+  strcpy(AWSEnd, d.c_str());
+  AWSEnd[d.length()] = '\0';
+  EEPROM_writeAnything(353, AWSEnd);
+}
+
+
+
+void handleSaveAwsConKey(){
+  if (!server.authenticate(www_username, www_password)) {
+   return server.requestAuthentication();
+  }
+  String f = server.arg("url_encode2");
+  char AWSConKey[25];
+  strcpy(AWSConKey, f.c_str());
+  AWSConKey[f.length()] = '\0';
+  EEPROM_writeAnything(408, AWSConKey);
+}
+
+
+
+void handleSaveAwsSecKey(){
+  if (!server.authenticate(www_username, www_password)) {
+   return server.requestAuthentication();
+  }
+  String g = server.arg("url_encode3");
+  char AWSSecKey[45];
+  strcpy(AWSSecKey, g.c_str());
+  AWSSecKey[g.length()] = '\0';
+  EEPROM_writeAnything(433, AWSSecKey);
+}
+
+
+
+void handleSaveGcpDev(){
+  if (!server.authenticate(www_username, www_password)) {
+   return server.requestAuthentication();
+  }
+  String h = server.arg("url_encode4");
+  char GCPDevice[15];
+  strcpy(GCPDevice, h.c_str());
+  GCPDevice[h.length()] = '\0';
+  EEPROM_writeAnything(495, GCPDevice);
+}
+
+
+
+void handleSaveGcpReg(){
+  if (!server.authenticate(www_username, www_password)) {
+   return server.requestAuthentication();
+  }
+  String j = server.arg("url_encode5");
+  char GCPRegistry[15];
+  strcpy(GCPRegistry, j.c_str());
+  GCPRegistry[j.length()] = '\0';
+  EEPROM_writeAnything(478, GCPRegistry);
+}
+
+////////////////////////////////////////////////////////////
 
 
 void handleSaveDweet() {
@@ -198,7 +303,7 @@ void handleSaveDweet() {
     DweetData = true;
     }
     else {DweetData = false;}
-    EEPROM_writeAnything(150, DweetData);
+    EEPROM_writeAnything(130, DweetData);
 }
 
 
@@ -220,7 +325,7 @@ void savePlatformState(){
     else if(server.arg("PlatformState")=="3"){
     platformNo = 3; 
     }
-    EEPROM_writeAnything(205, platformNo);
+    EEPROM_writeAnything(140, platformNo);
 }
 
 
@@ -232,7 +337,7 @@ void handlePinSetReporting(){
     return server.requestAuthentication();
     }  
     struct ESPPins ReadPinSet;
-    EEPROM_readAnything(128,ReadPinSet);
+    EEPROM_readAnything(108,ReadPinSet);
     
     struct Reporting PinReporting;
     EEPROM_readAnything(0,PinReporting);
@@ -454,17 +559,26 @@ void handleConKey() {
     return server.requestAuthentication();
     }
   
-    char ConKey[200];
-    EEPROM_readAnything(256, ConKey);
+    char ConKey[190];
+    EEPROM_readAnything(163, ConKey);
 
-    char AWSEnd[200] = "test";
-    char AWSConKey[200] = "test";
-    char AWSSecKey[200] = "test";
-    char AWSRegKey[200] = "test";
-    char AWSTop[200] = "test";
+    char AWSEnd[55];
+    EEPROM_readAnything(353, AWSEnd);
+    
+    char AWSConKey[25];
+    EEPROM_readAnything(408, AWSConKey);
+    
+    char AWSSecKey[45];
+    EEPROM_readAnything(433, AWSSecKey);
+
+    char GCPDevice[15];
+    EEPROM_readAnything(495, GCPDevice);
+    
+    char GCPRegistry[15];
+    EEPROM_readAnything(478, GCPRegistry);
 
     int PlatformData;
-    EEPROM_readAnything(205,PlatformData);
+    EEPROM_readAnything(140,PlatformData);
 
       String Page = FPSTR(HTTP_HEADER);
   	Page += FPSTR(HTTP_HEADER_PARAM);
@@ -578,54 +692,17 @@ void handleConKey() {
     item.replace("{i5)", "");
     item.replace("{i6)", "");
     Page += item;
-
-    item = FPSTR(HTTP_FIELDSET_PARAM);
-    item.replace("{L)", "AWS Region Key");
-    item.replace("{i1)", HTTP_INPUT_PARAM);
-    item.replace("{f_id)", "AWS4");
-    if(PlatformData != 2){item.replace("{s_d)", "display:none");}
-    item.replace("{i_t)", "text");
-    item.replace("{N)", "AWSRegKey");
-    item.replace("{id}", "AWSRegKey");
-    item.replace("{V)", AWSRegKey);
-    item.replace("{pf)", "size=30 autofocus");
-    item.replace("{F)", "");
-    item.replace("{i2)", "");
-    item.replace("{i3)", "");
-    item.replace("{i4)", "");
-    item.replace("{i5)", "");
-    item.replace("{i6)", "");
-    Page += item;
-
-    item = FPSTR(HTTP_FIELDSET_PARAM);
-    item.replace("{L)", "AWS Topic");
-    item.replace("{i1)", HTTP_INPUT_PARAM);
-    item.replace("{f_id)", "AWS5");
-    if(PlatformData != 2){item.replace("{s_d)", "display:none");}
-    item.replace("{i_t)", "text");
-    item.replace("{N)", "AWSTop");
-    item.replace("{id}", "AWSTop");
-    item.replace("{V)", AWSTop);
-    item.replace("{pf)", "size=30 autofocus");
-    item.replace("{F)", "");
-    item.replace("{i2)", "");
-    item.replace("{i3)", "");
-    item.replace("{i4)", "");
-    item.replace("{i5)", "");
-    item.replace("{i6)", "");
-    Page += item;
-
     //////////////////////////////////////////////////////////////////////////////////////
   
     item = FPSTR(HTTP_FIELDSET_PARAM);
-    item.replace("{L)", "GCP Connection Key");
+    item.replace("{L)", "GCP Devide ID");
     item.replace("{i1)", HTTP_INPUT_PARAM);
-    item.replace("{f_id)", "GCP");
+    item.replace("{f_id)", "GCP1");
     if(PlatformData != 3){item.replace("{s_d)", "display:none");}
     item.replace("{i_t)", "text");
-    item.replace("{N)", "ConKey");
-    item.replace("{id}", "ConKey");
-    item.replace("{V)", ConKey);
+    item.replace("{N)", "GCPDevice");
+    item.replace("{id}", "GCPDevice");
+    item.replace("{V)", GCPDevice);
     item.replace("{pf)", "size=30 autofocus");
     item.replace("{F)", "");
     item.replace("{i2)", "");
@@ -634,6 +711,25 @@ void handleConKey() {
     item.replace("{i5)", "");
     item.replace("{i6)", "");
     Page += item;
+
+    item = FPSTR(HTTP_FIELDSET_PARAM);
+    item.replace("{L)", "GCP Registry ID");
+    item.replace("{i1)", HTTP_INPUT_PARAM);
+    item.replace("{f_id)", "GCP2");
+    if(PlatformData != 3){item.replace("{s_d)", "display:none");}
+    item.replace("{i_t)", "text");
+    item.replace("{N)", "GCPRegistry");
+    item.replace("{id}", "GCPRegistry");
+    item.replace("{V)", GCPRegistry);
+    item.replace("{pf)", "size=30 autofocus");
+    item.replace("{F)", "");
+    item.replace("{i2)", "");
+    item.replace("{i3)", "");
+    item.replace("{i4)", "");
+    item.replace("{i5)", "");
+    item.replace("{i6)", "");
+    Page += item;
+    
   
   	item = FPSTR(HTTP_FIELDSET_PARAM);
   	item.replace("{L)", "Actions");
@@ -651,12 +747,22 @@ void handleConKey() {
                 "<button type=\"button\" class=\"btn btn-danger\" data-dismiss=\"modal\" id=\"closeBtn\">Confirm</button></div></div></div></div>"
                 "<script src=\"https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js\"></script>"
                 "<script>"
-                "var url_encode; var ConKey; var AWSEnd; var AWSConKey; var AWSSecKey; var AWSRegKey; var AWSTop;"
-                "$('input:radio[name=\"PlatformState\"]').change(function(){if($(PlatformState1).is(':checked')){$('#Azure').show(); $('#AWS1').hide(); $('#AWS2').hide(); $('#AWS3').hide(); $('#AWS4').hide(); $('#AWS5').hide(); $('#GCP').hide();}else if($(PlatformState2).is(':checked')){$('#AWS1').show(); $('#AWS2').show(); $('#AWS3').show(); $('#AWS4').show(); $('#AWS5').show(); $('#GCP').hide(); $('#Azure').hide();}else if($(PlatformState3).is(':checked')){$('#GCP').show(); $('#AWS1').hide(); $('#AWS2').hide(); $('#AWS3').hide(); $('#AWS4').hide(); $('#AWS5').hide(); $('#Azure').hide();}});"           
+                "var url_encode; var url_encode1; var url_encode2; var url_encode3; var url_encode4; var url_encode5; var ConKey; var AWSEnd; var AWSConKey; var AWSSecKey; var GCPDevice; var GCPRegistry;"
+                "$('input:radio[name=\"PlatformState\"]').change(function(){if($(PlatformState1).is(':checked')){$('#Azure').show(); $('#AWS1').hide(); $('#AWS2').hide(); $('#AWS3').hide(); $('#GCP1').hide(); $('#GCP2').hide();}else if($(PlatformState2).is(':checked')){$('#AWS1').show(); $('#AWS2').show(); $('#AWS3').show(); $('#GCP1').hide(); $('#GCP2').hide(); $('#Azure').hide();}else if($(PlatformState3).is(':checked')){$('#GCP1').show(); $('#GCP2').show(); $('#AWS1').hide(); $('#AWS2').hide(); $('#AWS3').hide(); $('#Azure').hide();}});"           
                 "$('#set_button').click(function(OnEvent){ OnEvent.preventDefault();"          
-                "ConKey = $('#ConKey').val(); AWSEnd = $('#AWSEnd').val(); AWSConKey = $('#AWSConKey').val(); AWSSecKey = $('#AWSSecKey').val(); AWSRegKey = $('#AWSRegKey').val(); AWSTop = $('#AWSTop').val();"
-                "url_encode = encodeURIComponent(ConKey);"
+                "ConKey = $('#ConKey').val(); AWSEnd = $('#AWSEnd').val(); AWSConKey = $('#AWSConKey').val(); AWSSecKey = $('#AWSSecKey').val(); GCPDevice = $('#GCPDevice').val(); GCPRegistry = $('#GCPRegistry').val();"
+                "url_encode = encodeURIComponent(ConKey); url_encode1 = encodeURIComponent(AWSEnd); url_encode2 = encodeURIComponent(AWSConKey); url_encode3 = encodeURIComponent(AWSSecKey); url_encode4 = encodeURIComponent(GCPDevice); url_encode5 = encodeURIComponent(GCPRegistry);"
+
+                
+                
                 "$.get('/SetConKey?url_encode=' + url_encode, function(url_encode){ console.log(url_encode);});"
+                "$.get('/SetAwsKey?url_encode1=' + url_encode1, function(url_encode1){ console.log(url_encode1);});"
+                "$.get('/SetAwsCon?url_encode2=' + url_encode2, function(url_encode2){ console.log(url_encode2);});"
+                "$.get('/SetAwsSec?url_encode3=' + url_encode3, function(url_encode3){ console.log(url_encode3);});"
+                "$.get('/SetGcpDev?url_encode4=' + url_encode4, function(url_encode4){ console.log(url_encode4);});"
+                "$.get('/SetGcpReg?url_encode5=' + url_encode5, function(url_encode5){ console.log(url_encode5);});"
+                
+
                 // Switch Platform
                 "var PlatformState = $('input[name=PlatformState]:checked', '#ConKeyForm').val();"
                 "$.get('/SetPlatform?PlatformState=' + PlatformState, function(PlatformState){ console.log(PlatformState); }); "  
@@ -680,7 +786,7 @@ void handleSettings() {
       return server.requestAuthentication();
       }
       bool DweetData;
-      EEPROM_readAnything(150, DweetData);
+      EEPROM_readAnything(130, DweetData);
 
         String Page = FPSTR(HTTP_HEADER);
       Page += FPSTR(HTTP_HEADER_PARAM);

@@ -33,19 +33,19 @@ void restore_factory_settings() {
     sprintf(PinReporting.A0Name, "A0Status");
     sprintf(PinReporting.messageID, "messageID");
 
-    char IOT_CONFIG_CONNECTION_STRING[200]; 
-    char aws_endpoint[];
-    char aws_key[];
-    char aws_secret[];
-    char gcp_regId[];
-    char gcp_devId[];
+    char IOT_CONFIG_CONNECTION_STRING[190]; 
+    char aws_endpoint[55];
+    char aws_key[25];
+    char aws_secret[45];
+    char gcp_regId[15];
+    char gcp_devId[15];
     
     sprintf(IOT_CONFIG_CONNECTION_STRING, "NOT_SET");
 
     EEPROM_writeAnything(0, PinReporting);
-    EEPROM_writeAnything(128, PinSet);
-    EEPROM_writeAnything(150, DweetData);
-    EEPROM_writeAnything(155, "YES");
+    EEPROM_writeAnything(108, PinSet);
+    EEPROM_writeAnything(130, DweetData);
+    EEPROM_writeAnything(135, "YES");
     EEPROM_writeAnything(163,IOT_CONFIG_CONNECTION_STRING); //will be approx 190 char
     EEPROM_writeAnything(353, aws_endpoint);// will be approx 55 char 
     EEPROM_writeAnything(408, aws_key); // will be approx 25 char
