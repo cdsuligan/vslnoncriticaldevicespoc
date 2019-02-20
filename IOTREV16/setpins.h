@@ -13,4 +13,11 @@ struct ESPPins {
 
 void SetPins(struct ESPPins pin);
 
+struct PinStatus {
+  bool D0Status;
+  bool D1Status;
+  bool D2Status;
+  bool A0Status;
+};
+
 #endif /* SETPINS_H */
