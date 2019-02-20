@@ -37,21 +37,27 @@ void restore_factory_settings() {
     char aws_endpoint[55];
     char aws_key[25];
     char aws_secret[45];
-    char gcp_regId[15];
-    char gcp_devId[15];
+    char registry_id[15];
+    char device_id[15];
     
     sprintf(IOT_CONFIG_CONNECTION_STRING, "NOT_SET");
+    sprintf(aws_endpoint, "NOT_SET");
+    sprintf(aws_key, "NOT_SET");
+    sprintf(aws_secret, "NOT_SET");
+    sprintf(device_id, "NOT_SET");
+    sprintf(registry_id, "NOT_SET");
 
     EEPROM_writeAnything(0, PinReporting);
-    EEPROM_writeAnything(108, PinSet);
-    EEPROM_writeAnything(130, DweetData);
-    EEPROM_writeAnything(135, "YES");
+    EEPROM_writeAnything(128, PinSet);
+    EEPROM_writeAnything(163, DweetData);
+    EEPROM_writeAnything(155, "YES");
     EEPROM_writeAnything(163,IOT_CONFIG_CONNECTION_STRING); //will be approx 190 char
     EEPROM_writeAnything(353, aws_endpoint);// will be approx 55 char 
     EEPROM_writeAnything(408, aws_key); // will be approx 25 char
     EEPROM_writeAnything(433, aws_secret); // will be approx 45 char
-    EEPROM_writeAnything(478, gcp_regId); // must be less then 15 char
-    EEPROM_writeAnything(495, gcp_devId); // must be less then 15 char
+    EEPROM_writeAnything(478, device_id); // must be less then 15 char
+    EEPROM_writeAnything(495, registry_id); // must be less then 15 char
+    
 
     for (int i = 0; i < 512; i++){
      char temp = EEPROM.read(i);

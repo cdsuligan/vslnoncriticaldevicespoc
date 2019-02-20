@@ -173,7 +173,7 @@ void FactorySettings() {
     if (!server.authenticate(www_username, www_password)) {
     return server.requestAuthentication();
     }
-    EEPROM_writeAnything(135, "NO");
+    EEPROM_writeAnything(155, "NO");
     ESP.restart();
 }
 
@@ -186,43 +186,11 @@ void handleSaveConKey() {
    return server.requestAuthentication();
    }
    String s = server.arg("url_encode");
-   String d = server.arg("url_encode1");
-   /*String f = server.arg("url_encode2");
-   String g = server.arg("url_encode3");
-   String h = server.arg("url_encode4");
-   String j = server.arg("url_encode5");
-   */
-   char ConKey[190];
-   
-   //char AWSEnd[55];
-   /*char AWSConKey[25];
-   char AWSSecKey[45];
-
-   char GCPDevice[15];
-   char GCPRegistry[15];
-*/
-   
+   char ConKey[190]; 
    strcpy(ConKey, s.c_str());
-   //strcpy(AWSEnd, d.c_str());
-  /* strcpy(AWSConKey, f.c_str());
-   strcpy(AWSSecKey, g.c_str());
-   strcpy(GCPDevice, h.c_str());
-   strcpy(GCPRegistry, j.c_str());
-   */
-   ConKey[s.length()] = '\0';
-   //AWSEnd[d.length()] = '\0';
-   /*AWSConKey[f.length()] = '\0';
-   AWSSecKey[g.length()] = '\0';
-   GCPDevice[h.length()] = '\0';
-   GCPRegistry[j.length()] = '\0';   //add the null terminator at the end of the string
-   */
+   ConKey[s.length()] = '\0';//add the null terminator at the end of the string
    EEPROM_writeAnything(163, ConKey);
-   //EEPROM_writeAnything(353, AWSEnd);
-   /*EEPROM_writeAnything(408, AWSConKey);
-   EEPROM_writeAnything(433, AWSSecKey);
-   EEPROM_writeAnything(495, GCPDevice);
-   EEPROM_writeAnything(478, GCPRegistry);
-     */ 
+  
 }
 
 
@@ -274,7 +242,7 @@ void handleSaveGcpDev(){
   char GCPDevice[15];
   strcpy(GCPDevice, h.c_str());
   GCPDevice[h.length()] = '\0';
-  EEPROM_writeAnything(495, GCPDevice);
+  EEPROM_writeAnything(478, GCPDevice);
 }
 
 
@@ -287,7 +255,7 @@ void handleSaveGcpReg(){
   char GCPRegistry[15];
   strcpy(GCPRegistry, j.c_str());
   GCPRegistry[j.length()] = '\0';
-  EEPROM_writeAnything(478, GCPRegistry);
+  EEPROM_writeAnything(495, GCPRegistry);
 }
 
 ////////////////////////////////////////////////////////////
@@ -303,7 +271,7 @@ void handleSaveDweet() {
     DweetData = true;
     }
     else {DweetData = false;}
-    EEPROM_writeAnything(130, DweetData);
+    EEPROM_writeAnything(163, DweetData);
 }
 
 
@@ -337,7 +305,7 @@ void handlePinSetReporting(){
     return server.requestAuthentication();
     }  
     struct ESPPins ReadPinSet;
-    EEPROM_readAnything(108,ReadPinSet);
+    EEPROM_readAnything(128,ReadPinSet);
     
     struct Reporting PinReporting;
     EEPROM_readAnything(0,PinReporting);
@@ -572,10 +540,10 @@ void handleConKey() {
     EEPROM_readAnything(433, AWSSecKey);
 
     char GCPDevice[15];
-    EEPROM_readAnything(495, GCPDevice);
+    EEPROM_readAnything(478, GCPDevice);
     
     char GCPRegistry[15];
-    EEPROM_readAnything(478, GCPRegistry);
+    EEPROM_readAnything(495, GCPRegistry);
 
     int PlatformData;
     EEPROM_readAnything(140,PlatformData);
@@ -753,8 +721,10 @@ void handleConKey() {
                 "ConKey = $('#ConKey').val(); AWSEnd = $('#AWSEnd').val(); AWSConKey = $('#AWSConKey').val(); AWSSecKey = $('#AWSSecKey').val(); GCPDevice = $('#GCPDevice').val(); GCPRegistry = $('#GCPRegistry').val();"
                 "url_encode = encodeURIComponent(ConKey); url_encode1 = encodeURIComponent(AWSEnd); url_encode2 = encodeURIComponent(AWSConKey); url_encode3 = encodeURIComponent(AWSSecKey); url_encode4 = encodeURIComponent(GCPDevice); url_encode5 = encodeURIComponent(GCPRegistry);"
 
-                
-                
+                // Switch Platform
+                "var PlatformState = $('input[name=PlatformState]:checked', '#ConKeyForm').val();"
+                "$.get('/SetPlatform?PlatformState=' + PlatformState, function(PlatformState){ console.log(PlatformState); }); "  
+                //
                 "$.get('/SetConKey?url_encode=' + url_encode, function(url_encode){ console.log(url_encode);});"
                 "$.get('/SetAwsKey?url_encode1=' + url_encode1, function(url_encode1){ console.log(url_encode1);});"
                 "$.get('/SetAwsCon?url_encode2=' + url_encode2, function(url_encode2){ console.log(url_encode2);});"
@@ -762,11 +732,6 @@ void handleConKey() {
                 "$.get('/SetGcpDev?url_encode4=' + url_encode4, function(url_encode4){ console.log(url_encode4);});"
                 "$.get('/SetGcpReg?url_encode5=' + url_encode5, function(url_encode5){ console.log(url_encode5);});"
                 
-
-                // Switch Platform
-                "var PlatformState = $('input[name=PlatformState]:checked', '#ConKeyForm').val();"
-                "$.get('/SetPlatform?PlatformState=' + PlatformState, function(PlatformState){ console.log(PlatformState); }); "  
-                //
                 "$('#myModal').show();});"
                 "$('#closeBtn').click(function(OnEvent){ $('#myModal').hide();});"
                 "</script>"
@@ -786,7 +751,7 @@ void handleSettings() {
       return server.requestAuthentication();
       }
       bool DweetData;
-      EEPROM_readAnything(130, DweetData);
+      EEPROM_readAnything(163, DweetData);
 
         String Page = FPSTR(HTTP_HEADER);
       Page += FPSTR(HTTP_HEADER_PARAM);
